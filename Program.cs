@@ -1,4 +1,5 @@
 using SquadCheck.Data;
+using SquadCheck.Managers;
 
 namespace SquadCheck
 {
@@ -10,6 +11,9 @@ namespace SquadCheck
 
             builder.Services.AddControllersWithViews();
             builder.Services.AddSingleton<IDataManager, DataManager>();
+            builder.Services.AddScoped<GroupManager>();
+            builder.Services.AddScoped<PracticeManager>();
+            builder.Services.AddScoped<AttendanceManager>();
 
             var app = builder.Build();
 
