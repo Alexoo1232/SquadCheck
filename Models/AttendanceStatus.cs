@@ -1,10 +1,9 @@
-namespace SquadCheck.Models
+namespace SquadCheck.Models;
+
+public enum AttendanceStatus
 {
-    public enum AttendanceStatus
-    {
-        Going,
-        NoGoing,
-        NotSure,
-        NoResponse
-    }
+    Going,
+    NotGoing,
+    Maybe,
+    NoResponse
 }
