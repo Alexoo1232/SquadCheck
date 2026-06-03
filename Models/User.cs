@@ -4,11 +4,11 @@ public class User
 {
     public int Id { get; set; }
 
-    public string FullName { get; private set; }
+    public string FullName { get; set; }
 
-    public string Email { get; private set; }
+    public string Email { get; set; }
 
-    public bool IsCoach { get; private set; }
+    public bool IsCoach { get; set; }
 
     public User(int id, string fullName, string email, bool isCoach = false)
     {

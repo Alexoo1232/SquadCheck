@@ -8,9 +8,9 @@ public class GroupMember
 
     public int UserId { get; set; }
 
-    public GroupRole Role { get; private set; }
+    public GroupRole Role { get; set; }
 
-    public DateTime JoinedAt { get; private set; }
+    public DateTime JoinedAt { get; set; }
 
     public GroupMember(int id, int groupId, int userId, GroupRole role = GroupRole.Member)
     {

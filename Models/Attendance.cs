@@ -8,11 +8,11 @@ public class Attendance
 
     public int UserId { get; set; }
 
-    public AttendanceStatus Status { get; private set; }
+    public AttendanceStatus Status { get; set; }
 
-    public DateTime UpdatedAt { get; private set; }
+    public DateTime UpdatedAt { get; set; }
 
-    public string? Comment { get; private set; }
+    public string? Comment { get; set; }
 
     public Attendance(
         int id,

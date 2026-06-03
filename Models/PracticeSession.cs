@@ -6,17 +6,17 @@ public class PracticeSession
 
     public int GroupId { get; set; }
 
-    public string Title { get; private set; }
+    public string Title { get; set; }
 
-    public DateTime StartTime { get; private set; }
+    public DateTime StartTime { get; set; }
 
-    public DateTime EndTime { get; private set; }
+    public DateTime EndTime { get; set; }
 
-    public string Location { get; private set; }
+    public string Location { get; set; }
 
-    public int? MaxParticipants { get; private set; }
+    public int? MaxParticipants { get; set; }
 
-    public List<Attendance> Attendances { get; private set; }
+    public List<Attendance> Attendances { get; set; }
 
     public PracticeSession(
         int id,

@@ -4,13 +4,13 @@ public class Group
 {
     public int Id { get; set; }
 
-    public string Name { get; private set; }
+    public string Name { get; set; }
 
-    public string Description { get; private set; }
+    public string Description { get; set; }
 
-    public List<GroupMember> Members { get; private set; }
+    public List<GroupMember> Members { get; set; }
 
-    public List<PracticeSession> PracticeSessions { get; private set; }
+    public List<PracticeSession> PracticeSessions { get; set; }
 
     public Group(int id, string name, string description = "")
     {
