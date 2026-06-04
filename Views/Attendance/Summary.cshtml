@@ -1,0 +1,134 @@
+@model SquadCheck.Models.ViewModels.PracticeDetailsViewModel
+@using SquadCheck.Models
+
+@{
+    ViewData["Title"] = "Attendance summary";
+}
+
+<div class="container mt-4">
+    <div class="mb-3">
+        <a asp-controller="Practices"
+           asp-action="Details"
+           asp-route-id="@Model.PracticeSession.Id"
+           class="text-decoration-none">
+            ← Back to practice
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h1 class="h3 mb-2">Attendance summary</h1>
+
+            <p class="text-muted mb-1">
+                @Model.PracticeSession.Title
+            </p>
+
+            <p class="mb-0">
+                <strong>Group:</strong> @Model.Group.Name
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="h3 mb-0">@Model.Summary.GoingCount</div>
+                    <div class="text-muted">Going</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="h3 mb-0">@Model.Summary.NotGoingCount</div>
+                    <div class="text-muted">Not going</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="h3 mb-0">@Model.Summary.MaybeCount</div>
+                    <div class="text-muted">Maybe</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="h3 mb-0">@Model.Summary.NoResponseCount</div>
+                    <div class="text-muted">No response</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="h5 mb-3">All members</h2>
+
+            @if (Model.Members.Count == 0)
+            {
+                <p class="text-muted mb-0">
+                    No members have been added to this group yet.
+                </p>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var member in Model.Members)
+                    {
+                        var user = Model.Users.FirstOrDefault(user => user.Id == member.UserId);
+                        var attendance = Model.Attendances.FirstOrDefault(attendance => attendance.UserId == member.UserId);
+
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <h3 class="h6 mb-1">
+                                        @(user?.FullName ?? "Unknown user")
+                                    </h3>
+
+                                    <p class="text-muted mb-1">
+                                        @(user?.Email ?? "No email")
+                                    </p>
+
+                                    @if (!string.IsNullOrWhiteSpace(attendance?.Comment))
+                                    {
+                                        <p class="mb-0">
+                                            "@attendance.Comment"
+                                        </p>
+                                    }
+                                </div>
+
+                                @if (attendance == null)
+                                {
+                                    <span class="badge bg-secondary">No response</span>
+                                }
+                                else if (attendance.Status == AttendanceStatus.Going)
+                                {
+                                    <span class="badge bg-success">Going</span>
+                                }
+                                else if (attendance.Status == AttendanceStatus.NotGoing)
+                                {
+                                    <span class="badge bg-danger">Not going</span>
+                                }
+                                else if (attendance.Status == AttendanceStatus.Maybe)
+                                {
+                                    <span class="badge bg-warning text-dark">Maybe</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">No response</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

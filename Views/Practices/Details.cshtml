@@ -8,7 +8,7 @@
 <div class="container mt-4">
     <div class="mb-3">
         <a asp-controller="Practices" asp-action="Index" class="text-decoration-none">
-            &larr; Back to practices
+            ← Back to practices
         </a>
     </div>
 
@@ -93,7 +93,80 @@
 
     <div class="row g-4">
         <div class="col-12 col-lg-5">
-            <div class="card shadow-sm h-100">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Mark attendance</h2>
+
+                    @if (Model.Members.Count == 0)
+                    {
+                        <p class="text-muted mb-0">
+                            Add members to this group before marking attendance.
+                        </p>
+                    }
+                    else
+                    {
+                        <form asp-controller="Attendance" asp-action="Mark" method="post">
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="PracticeSessionId" value="@Model.PracticeSession.Id" />
+
+                            <div class="mb-3">
+                                <label for="UserId" class="form-label">Member</label>
+                                <select name="UserId" id="UserId" class="form-select" required>
+                                    <option value="">Choose member</option>
+
+                                    @foreach (var member in Model.Members)
+                                    {
+                                        var user = Model.Users.FirstOrDefault(user => user.Id == member.UserId);
+
+                                        if (user != null)
+                                        {
+                                            <option value="@user.Id">
+                                                @user.FullName (@member.Role)
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="Comment" class="form-label">Comment</label>
+                                <input type="text"
+                                       name="Comment"
+                                       id="Comment"
+                                       class="form-control"
+                                       maxlength="200"
+                                       placeholder="Optional comment" />
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit"
+                                        name="Status"
+                                        value="@AttendanceStatus.Going"
+                                        class="btn btn-success">
+                                    Going
+                                </button>
+
+                                <button type="submit"
+                                        name="Status"
+                                        value="@AttendanceStatus.Maybe"
+                                        class="btn btn-warning">
+                                    Maybe
+                                </button>
+
+                                <button type="submit"
+                                        name="Status"
+                                        value="@AttendanceStatus.NotGoing"
+                                        class="btn btn-danger">
+                                    Not going
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
                 <div class="card-body">
                     <h2 class="h5 mb-3">Attendance summary</h2>
 
@@ -130,6 +203,15 @@
                     <p class="text-muted mt-3 mb-0">
                         Total members: @Model.Summary.TotalMembers
                     </p>
+
+                    <div class="mt-3">
+                        <a asp-controller="Attendance"
+                           asp-action="Summary"
+                           asp-route-practiceSessionId="@Model.PracticeSession.Id"
+                           class="btn btn-outline-secondary w-100">
+                            Open full summary
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
