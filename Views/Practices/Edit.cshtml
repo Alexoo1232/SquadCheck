@@ -1,0 +1,96 @@
+@model SquadCheck.Models.ViewModels.EditPracticeSessionViewModel
+
+@{
+    ViewData["Title"] = "Edit practice";
+}
+
+<div class="container mt-4">
+    <div class="mb-3">
+        <a asp-controller="Practices"
+           asp-action="Details"
+           asp-route-id="@Model.Id"
+           class="text-decoration-none">
+            &larr; Back to practice
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h1 class="h3 mb-2">Edit practice</h1>
+                    <p class="text-muted">Update the practice session details.</p>
+
+                    <form asp-controller="Practices" asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" asp-for="Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="GroupId" class="form-label"></label>
+                            <select asp-for="GroupId" class="form-select" asp-items="ViewBag.Groups" disabled>
+                            </select>
+                            <input type="hidden" asp-for="GroupId" />
+                            <span asp-validation-for="GroupId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label"></label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="StartTime" class="form-label"></label>
+                            <input asp-for="StartTime"
+                                   type="datetime-local"
+                                   class="form-control"
+                                   value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" />
+                            <span asp-validation-for="StartTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EndTime" class="form-label"></label>
+                            <input asp-for="EndTime"
+                                   type="datetime-local"
+                                   class="form-control"
+                                   value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" />
+                            <span asp-validation-for="EndTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Location" class="form-label"></label>
+                            <input asp-for="Location" class="form-control" />
+                            <span asp-validation-for="Location" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="MaxParticipants" class="form-label"></label>
+                            <input asp-for="MaxParticipants"
+                                   type="number"
+                                   min="1"
+                                   class="form-control"
+                                   placeholder="Optional" />
+                            <span asp-validation-for="MaxParticipants" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex">
+                            <button type="submit" class="btn btn-primary">
+                                Save changes
+                            </button>
+
+                            <a asp-controller="Practices"
+                               asp-action="Details"
+                               asp-route-id="@Model.Id"
+                               class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
