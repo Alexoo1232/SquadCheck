@@ -1,0 +1,204 @@
+@model SquadCheck.Models.ViewModels.PracticeDetailsViewModel
+@using SquadCheck.Models
+
+@{
+    ViewData["Title"] = Model.PracticeSession.Title;
+}
+
+<div class="container mt-4">
+    <div class="mb-3">
+        <a asp-controller="Practices" asp-action="Index" class="text-decoration-none">
+            &larr; Back to practices
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                <div>
+                    <h1 class="h3 mb-2">@Model.PracticeSession.Title</h1>
+
+                    <p class="text-muted mb-1">
+                        Group:
+                        <a asp-controller="Groups"
+                           asp-action="Details"
+                           asp-route-id="@Model.Group.Id">
+                            @Model.Group.Name
+                        </a>
+                    </p>
+
+                    <p class="mb-1">
+                        <strong>Date:</strong>
+                        @Model.PracticeSession.StartTime.ToString("yyyy-MM-dd")
+                    </p>
+
+                    <p class="mb-1">
+                        <strong>Time:</strong>
+                        @Model.PracticeSession.StartTime.ToString("HH:mm")
+                        -
+                        @Model.PracticeSession.EndTime.ToString("HH:mm")
+                    </p>
+
+                    <p class="mb-1">
+                        <strong>Location:</strong>
+                        @Model.PracticeSession.Location
+                    </p>
+
+                    @if (Model.PracticeSession.MaxParticipants.HasValue)
+                    {
+                        <p class="mb-0">
+                            <strong>Max participants:</strong>
+                            @Model.PracticeSession.MaxParticipants
+                        </p>
+                    }
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                    <a asp-controller="Practices"
+                       asp-action="Edit"
+                       asp-route-id="@Model.PracticeSession.Id"
+                       class="btn btn-outline-primary">
+                        Edit
+                    </a>
+
+                    <form asp-controller="Practices"
+                          asp-action="Cancel"
+                          asp-route-id="@Model.PracticeSession.Id"
+                          method="post"
+                          onsubmit="return confirm('Cancel this practice session?');">
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            Cancel
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Attendance summary</h2>
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="border rounded p-3 text-center">
+                                <div class="h4 mb-0">@Model.Summary.GoingCount</div>
+                                <div class="text-muted">Going</div>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="border rounded p-3 text-center">
+                                <div class="h4 mb-0">@Model.Summary.NotGoingCount</div>
+                                <div class="text-muted">Not going</div>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="border rounded p-3 text-center">
+                                <div class="h4 mb-0">@Model.Summary.MaybeCount</div>
+                                <div class="text-muted">Maybe</div>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="border rounded p-3 text-center">
+                                <div class="h4 mb-0">@Model.Summary.NoResponseCount</div>
+                                <div class="text-muted">No response</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-muted mt-3 mb-0">
+                        Total members: @Model.Summary.TotalMembers
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Member answers</h2>
+
+                    @if (Model.Members.Count == 0)
+                    {
+                        <p class="text-muted mb-0">
+                            No members have been added to this group yet.
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var member in Model.Members)
+                            {
+                                var user = Model.Users.FirstOrDefault(user => user.Id == member.UserId);
+                                var attendance = Model.Attendances.FirstOrDefault(attendance => attendance.UserId == member.UserId);
+
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <h3 class="h6 mb-1">
+                                                @(user?.FullName ?? "Unknown user")
+                                            </h3>
+
+                                            <p class="text-muted mb-1">
+                                                @(user?.Email ?? "No email")
+                                            </p>
+
+                                            @if (!string.IsNullOrWhiteSpace(attendance?.Comment))
+                                            {
+                                                <p class="mb-0">
+                                                    "@attendance.Comment"
+                                                </p>
+                                            }
+                                        </div>
+
+                                        @if (attendance == null)
+                                        {
+                                            <span class="badge bg-secondary">No response</span>
+                                        }
+                                        else if (attendance.Status == AttendanceStatus.Going)
+                                        {
+                                            <span class="badge bg-success">Going</span>
+                                        }
+                                        else if (attendance.Status == AttendanceStatus.NotGoing)
+                                        {
+                                            <span class="badge bg-danger">Not going</span>
+                                        }
+                                        else if (attendance.Status == AttendanceStatus.Maybe)
+                                        {
+                                            <span class="badge bg-warning text-dark">Maybe</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">No response</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
