@@ -1,0 +1,88 @@
+@model SquadCheck.Models.ViewModels.CreatePracticeSessionViewModel
+
+@{
+    ViewData["Title"] = "Create practice";
+}
+
+<div class="container mt-4">
+    <div class="mb-3">
+        <a asp-controller="Practices" asp-action="Index" class="text-decoration-none">
+            &larr; Back to practices
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h1 class="h3 mb-2">Create practice</h1>
+                    <p class="text-muted">Plan a new practice session for a group.</p>
+
+                    <form asp-controller="Practices" asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="GroupId" class="form-label"></label>
+                            <select asp-for="GroupId" class="form-select" asp-items="ViewBag.Groups">
+                                <option value="">Choose group</option>
+                            </select>
+                            <span asp-validation-for="GroupId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label"></label>
+                            <input asp-for="Title" class="form-control" placeholder="Example: Evening practice" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="StartTime" class="form-label"></label>
+                            <input asp-for="StartTime"
+                                   type="datetime-local"
+                                   class="form-control"
+                                   value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" />
+                            <span asp-validation-for="StartTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EndTime" class="form-label"></label>
+                            <input asp-for="EndTime"
+                                   type="datetime-local"
+                                   class="form-control"
+                                   value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" />
+                            <span asp-validation-for="EndTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Location" class="form-label"></label>
+                            <input asp-for="Location" class="form-control" placeholder="Example: Sports Hall" />
+                            <span asp-validation-for="Location" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="MaxParticipants" class="form-label"></label>
+                            <input asp-for="MaxParticipants"
+                                   type="number"
+                                   min="1"
+                                   class="form-control"
+                                   placeholder="Optional" />
+                            <span asp-validation-for="MaxParticipants" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex">
+                            <button type="submit" class="btn btn-primary">
+                                Create practice
+                            </button>
+
+                            <a asp-controller="Practices" asp-action="Index" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
