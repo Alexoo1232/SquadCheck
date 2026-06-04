@@ -1,0 +1,186 @@
+@model SquadCheck.Models.ViewModels.GroupDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Group.Name;
+}
+
+<div class="container mt-4">
+    <div class="mb-3">
+        <a asp-controller="Groups" asp-action="Index" class="text-decoration-none">
+            ← Back to groups
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                <div>
+                    <h1 class="h3 mb-2">@Model.Group.Name</h1>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Group.Description))
+                    {
+                        <p class="text-muted mb-0">@Model.Group.Description</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No description added.</p>
+                    }
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                    <a asp-controller="Groups"
+                       asp-action="AddMember"
+                       asp-route-groupId="@Model.Group.Id"
+                       class="btn btn-primary">
+                        Add member
+                    </a>
+
+                    <a asp-controller="Practices"
+                       asp-action="Create"
+                       asp-route-groupId="@Model.Group.Id"
+                       class="btn btn-outline-primary">
+                        Create practice
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Members</h2>
+
+                    @if (Model.Members.Count == 0)
+                    {
+                        <p class="text-muted mb-0">
+                            No members have been added to this group yet.
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var member in Model.Members)
+                            {
+                                var user = Model.Users.FirstOrDefault(user => user.Id == member.UserId);
+
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <h3 class="h6 mb-1">
+                                                @(user?.FullName ?? "Unknown user")
+                                            </h3>
+
+                                            <p class="text-muted mb-1">
+                                                @(user?.Email ?? "No email")
+                                            </p>
+
+                                            <span class="badge bg-secondary">
+                                                @member.Role
+                                            </span>
+                                        </div>
+
+                                        <form asp-controller="Groups"
+                                              asp-action="RemoveMember"
+                                              method="post"
+                                              onsubmit="return confirm('Remove this member from the group?');">
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden" name="groupId" value="@Model.Group.Id" />
+                                            <input type="hidden" name="userId" value="@member.UserId" />
+
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                Remove
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Practice sessions</h2>
+
+                    @if (Model.PracticeSessions.Count == 0)
+                    {
+                        <p class="text-muted mb-0">
+                            No practices have been created for this group yet.
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var session in Model.PracticeSessions.OrderBy(session => session.StartTime))
+                            {
+                                <a asp-controller="Practices"
+                                   asp-action="Details"
+                                   asp-route-id="@session.Id"
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <h3 class="h6 mb-1">@session.Title</h3>
+
+                                            <p class="text-muted mb-1">
+                                                @session.StartTime.ToString("yyyy-MM-dd HH:mm")
+                                                -
+                                                @session.EndTime.ToString("HH:mm")
+                                            </p>
+
+                                            <p class="mb-0">
+                                                @session.Location
+                                            </p>
+                                        </div>
+
+                                        @if (session.IsUpcoming())
+                                        {
+                                            <span class="badge bg-success">Upcoming</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Past</span>
+                                        }
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <form asp-controller="Groups"
+              asp-action="Delete"
+              asp-route-id="@Model.Group.Id"
+              method="post"
+              onsubmit="return confirm('Delete this group and all related practices?');">
+            @Html.AntiForgeryToken()
+
+            <button type="submit" class="btn btn-outline-danger">
+                Delete group
+            </button>
+        </form>
+    </div>
+</div>
