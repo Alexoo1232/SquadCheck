@@ -181,9 +181,22 @@
                     syncDateTime(hiddenId, dateId, hourId, minuteId);
                 };
 
-                document.getElementById(dateId)?.addEventListener("change", update);
-                document.getElementById(hourId)?.addEventListener("change", update);
-                document.getElementById(minuteId)?.addEventListener("change", update);
+                const date = document.getElementById(dateId);
+                const hour = document.getElementById(hourId);
+                const minute = document.getElementById(minuteId);
+
+                if (date != null) {
+                    date.addEventListener("change", update);
+                }
+
+                if (hour != null) {
+                    hour.addEventListener("change", update);
+                }
+
+                if (minute != null) {
+                    minute.addEventListener("change", update);
+                }
+
                 update();
             }
 
