@@ -3,7 +3,12 @@
 
 @{
     ViewData["Title"] = "Add member";
-    string groupName = ViewBag.GroupName ?? "Group";
+    string groupName = "Group";
+
+    if (ViewBag.GroupName != null)
+    {
+        groupName = ViewBag.GroupName.ToString();
+    }
 }
 
 <div class="container mt-4">
