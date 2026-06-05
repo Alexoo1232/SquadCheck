@@ -21,9 +21,12 @@ public class PracticeManager
         int? maxParticipants = null)
     {
         AppData data = _dataManager.LoadData();
+        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
 
-        Group group = data.Groups.FirstOrDefault(group => group.Id == groupId)
-            ?? throw new InvalidOperationException("The group could not be found.");
+        if (group == null)
+        {
+            throw new InvalidOperationException("The group could not be found.");
+        }
 
         PracticeSession session = new PracticeSession(
             data.GetNextPracticeSessionId(),
@@ -70,7 +73,6 @@ public class PracticeManager
     public List<PracticeSession> GetSessionsForGroup(int groupId)
     {
         AppData data = _dataManager.LoadData();
-
         bool groupExists = data.Groups.Any(group => group.Id == groupId);
 
         if (!groupExists)
@@ -87,7 +89,6 @@ public class PracticeManager
     public List<PracticeSession> GetSessionsForUser(int userId)
     {
         AppData data = _dataManager.LoadData();
-
         bool userExists = data.Users.Any(user => user.Id == userId);
 
         if (!userExists)
@@ -115,9 +116,12 @@ public class PracticeManager
         int? maxParticipants = null)
     {
         AppData data = _dataManager.LoadData();
+        PracticeSession? session = data.PracticeSessions.FirstOrDefault(session => session.Id == sessionId);
 
-        PracticeSession session = data.PracticeSessions.FirstOrDefault(session => session.Id == sessionId)
-            ?? throw new InvalidOperationException("The practice session could not be found.");
+        if (session == null)
+        {
+            throw new InvalidOperationException("The practice session could not be found.");
+        }
 
         session.UpdateSessionDetails(
             title,
@@ -134,7 +138,6 @@ public class PracticeManager
     public bool CancelSession(int sessionId)
     {
         AppData data = _dataManager.LoadData();
-
         PracticeSession? session = data.PracticeSessions.FirstOrDefault(session => session.Id == sessionId);
 
         if (session == null)

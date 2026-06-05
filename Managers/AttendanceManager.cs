@@ -19,10 +19,13 @@ public class AttendanceManager
         string? comment = null)
     {
         AppData data = _dataManager.LoadData();
+        PracticeSession? session = data.PracticeSessions
+            .FirstOrDefault(session => session.Id == practiceSessionId);
 
-        PracticeSession session = data.PracticeSessions
-            .FirstOrDefault(session => session.Id == practiceSessionId)
-            ?? throw new InvalidOperationException("The practice session could not be found.");
+        if (session == null)
+        {
+            throw new InvalidOperationException("The practice session could not be found.");
+        }
 
         ValidateMemberAccess(data, practiceSessionId, userId);
 
@@ -69,7 +72,6 @@ public class AttendanceManager
     public List<Attendance> GetAttendanceForSession(int practiceSessionId)
     {
         AppData data = _dataManager.LoadData();
-
         bool sessionExists = data.PracticeSessions.Any(session => session.Id == practiceSessionId);
 
         if (!sessionExists)
@@ -86,7 +88,6 @@ public class AttendanceManager
     public List<Attendance> GetAttendanceForUser(int userId)
     {
         AppData data = _dataManager.LoadData();
-
         bool userExists = data.Users.Any(user => user.Id == userId);
 
         if (!userExists)
@@ -103,22 +104,33 @@ public class AttendanceManager
     public AttendanceSummary GetSummary(int practiceSessionId)
     {
         AppData data = _dataManager.LoadData();
+        PracticeSession? session = data.PracticeSessions
+            .FirstOrDefault(session => session.Id == practiceSessionId);
 
-        PracticeSession session = data.PracticeSessions
-            .FirstOrDefault(session => session.Id == practiceSessionId)
-            ?? throw new InvalidOperationException("The practice session could not be found.");
+        if (session == null)
+        {
+            throw new InvalidOperationException("The practice session could not be found.");
+        }
 
-        Group group = data.Groups
-            .FirstOrDefault(group => group.Id == session.GroupId)
-            ?? throw new InvalidOperationException("The group could not be found.");
+        Group? group = data.Groups
+            .FirstOrDefault(group => group.Id == session.GroupId);
 
-        List<Attendance> sessionAttendances = data.Attendances
-            .Where(attendance => attendance.PracticeSessionId == practiceSessionId)
-            .ToList();
+        if (group == null)
+        {
+            throw new InvalidOperationException("The group could not be found.");
+        }
 
-        int goingCount = sessionAttendances.Count(attendance => attendance.Status == AttendanceStatus.Going);
-        int notGoingCount = sessionAttendances.Count(attendance => attendance.Status == AttendanceStatus.NotGoing);
-        int maybeCount = sessionAttendances.Count(attendance => attendance.Status == AttendanceStatus.Maybe);
+        int goingCount = data.Attendances.Count(attendance =>
+            attendance.PracticeSessionId == practiceSessionId &&
+            attendance.Status == AttendanceStatus.Going);
+
+        int notGoingCount = data.Attendances.Count(attendance =>
+            attendance.PracticeSessionId == practiceSessionId &&
+            attendance.Status == AttendanceStatus.NotGoing);
+
+        int maybeCount = data.Attendances.Count(attendance =>
+            attendance.PracticeSessionId == practiceSessionId &&
+            attendance.Status == AttendanceStatus.Maybe);
 
         int answeredCount = goingCount + notGoingCount + maybeCount;
         int noResponseCount = Math.Max(0, group.Members.Count - answeredCount);
@@ -137,7 +149,6 @@ public class AttendanceManager
     public bool CanUserAccessSession(int practiceSessionId, int userId)
     {
         AppData data = _dataManager.LoadData();
-
         PracticeSession? session = data.PracticeSessions
             .FirstOrDefault(session => session.Id == practiceSessionId);
 
@@ -158,13 +169,20 @@ public class AttendanceManager
 
     private static void ValidateMemberAccess(AppData data, int practiceSessionId, int userId)
     {
-        PracticeSession session = data.PracticeSessions
-            .FirstOrDefault(session => session.Id == practiceSessionId)
-            ?? throw new InvalidOperationException("The practice session could not be found.");
+        PracticeSession? session = data.PracticeSessions
+            .FirstOrDefault(session => session.Id == practiceSessionId);
 
-        Group group = data.Groups
-            .FirstOrDefault(group => group.Id == session.GroupId)
-            ?? throw new InvalidOperationException("The group could not be found.");
+        if (session == null)
+        {
+            throw new InvalidOperationException("The practice session could not be found.");
+        }
+
+        Group? group = data.Groups.FirstOrDefault(group => group.Id == session.GroupId);
+
+        if (group == null)
+        {
+            throw new InvalidOperationException("The group could not be found.");
+        }
 
         bool userIsMember = group.HasMember(userId);
 

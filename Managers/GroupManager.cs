@@ -15,9 +15,9 @@ public class GroupManager
     public User CreateUser(string fullName, string email, bool isCoach = false)
     {
         AppData data = _dataManager.LoadData();
-
+        string cleanedEmail = email.Trim();
         bool emailAlreadyExists = data.Users.Any(user =>
-            user.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+            user.Email.Equals(cleanedEmail, StringComparison.OrdinalIgnoreCase));
 
         if (emailAlreadyExists)
         {
@@ -55,9 +55,9 @@ public class GroupManager
     public Group CreateGroup(string name, string description = "")
     {
         AppData data = _dataManager.LoadData();
-
+        string cleanedName = name.Trim();
         bool groupAlreadyExists = data.Groups.Any(group =>
-            group.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase));
+            group.Name.Equals(cleanedName, StringComparison.OrdinalIgnoreCase));
 
         if (groupAlreadyExists)
         {
@@ -94,13 +94,17 @@ public class GroupManager
     public Group UpdateGroup(int groupId, string name, string description)
     {
         AppData data = _dataManager.LoadData();
+        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
 
-        Group group = data.Groups.FirstOrDefault(group => group.Id == groupId)
-            ?? throw new InvalidOperationException("The group could not be found.");
+        if (group == null)
+        {
+            throw new InvalidOperationException("The group could not be found.");
+        }
 
+        string cleanedName = name.Trim();
         bool nameUsedByAnotherGroup = data.Groups.Any(existingGroup =>
             existingGroup.Id != groupId &&
-            existingGroup.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase));
+            existingGroup.Name.Equals(cleanedName, StringComparison.OrdinalIgnoreCase));
 
         if (nameUsedByAnotherGroup)
         {
@@ -117,7 +121,6 @@ public class GroupManager
     public bool DeleteGroup(int groupId)
     {
         AppData data = _dataManager.LoadData();
-
         Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
 
         if (group == null)
@@ -130,11 +133,8 @@ public class GroupManager
             .Select(session => session.Id)
             .ToList();
 
-        data.Attendances.RemoveAll(attendance =>
-            sessionIds.Contains(attendance.PracticeSessionId));
-
-        data.PracticeSessions.RemoveAll(session =>
-            session.GroupId == groupId);
+        data.Attendances.RemoveAll(attendance => sessionIds.Contains(attendance.PracticeSessionId));
+        data.PracticeSessions.RemoveAll(session => session.GroupId == groupId);
 
         data.Groups.Remove(group);
 
@@ -146,12 +146,19 @@ public class GroupManager
     public GroupMember AddMemberToGroup(int groupId, int userId, GroupRole role = GroupRole.Member)
     {
         AppData data = _dataManager.LoadData();
+        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
 
-        Group group = data.Groups.FirstOrDefault(group => group.Id == groupId)
-            ?? throw new InvalidOperationException("The group could not be found.");
+        if (group == null)
+        {
+            throw new InvalidOperationException("The group could not be found.");
+        }
 
-        User user = data.Users.FirstOrDefault(user => user.Id == userId)
-            ?? throw new InvalidOperationException("The user could not be found.");
+        User? user = data.Users.FirstOrDefault(user => user.Id == userId);
+
+        if (user == null)
+        {
+            throw new InvalidOperationException("The user could not be found.");
+        }
 
         if (group.HasMember(user.Id))
         {
@@ -179,7 +186,6 @@ public class GroupManager
     public bool RemoveMemberFromGroup(int groupId, int userId)
     {
         AppData data = _dataManager.LoadData();
-
         Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
 
         if (group == null)
@@ -211,9 +217,12 @@ public class GroupManager
     public List<GroupMember> GetMembersForGroup(int groupId)
     {
         AppData data = _dataManager.LoadData();
+        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
 
-        Group group = data.Groups.FirstOrDefault(group => group.Id == groupId)
-            ?? throw new InvalidOperationException("The group could not be found.");
+        if (group == null)
+        {
+            throw new InvalidOperationException("The group could not be found.");
+        }
 
         return group.Members
             .OrderBy(member => member.Role)
