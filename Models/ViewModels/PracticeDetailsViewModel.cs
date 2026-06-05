@@ -4,17 +4,17 @@ namespace SquadCheck.Models.ViewModels;
 
 public class PracticeDetailsViewModel
 {
-    public PracticeSession PracticeSession { get; set; } = new();
+    public PracticeSession PracticeSession { get; set; } = new PracticeSession();
 
-    public Group Group { get; set; } = new();
+    public Group Group { get; set; } = new Group();
 
-    public List<User> Users { get; set; } = new();
+    public List<User> Users { get; set; } = new List<User>();
 
-    public List<GroupMember> Members { get; set; } = new();
+    public List<GroupMember> Members { get; set; } = new List<GroupMember>();
 
-    public List<Attendance> Attendances { get; set; } = new();
+    public List<Attendance> Attendances { get; set; } = new List<Attendance>();
 
-    public AttendanceSummary Summary { get; set; } = new();
+    public AttendanceSummary Summary { get; set; } = new AttendanceSummary();
 
-    public MarkAttendanceViewModel MarkAttendance { get; set; } = new();
+    public MarkAttendanceViewModel MarkAttendance { get; set; } = new MarkAttendanceViewModel();
 }

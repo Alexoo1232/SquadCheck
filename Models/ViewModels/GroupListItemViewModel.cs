@@ -4,7 +4,7 @@ namespace SquadCheck.Models.ViewModels;
 
 public class GroupListItemViewModel
 {
-    public Group Group { get; set; } = new();
+    public Group Group { get; set; } = new Group();
 
     public int MemberCount { get; set; }
 
