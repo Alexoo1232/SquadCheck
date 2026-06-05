@@ -1,45 +1,92 @@
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
 <div class="container mt-4">
-    <div class="mb-4">
-        <h1 class="h3 mb-1">Dashboard</h1>
-        <p class="text-muted mb-0">Quick overview of your groups and upcoming practices.</p>
+    <div class="page-header">
+        <h1 class="page-title">SquadCheck</h1>
+        <p class="page-subtitle">
+            Plan practices, manage groups, and collect attendance in one place.
+        </p>
     </div>
 
     <div class="row g-3 mb-4">
         <div class="col-12 col-md-6">
-            <div class="card shadow-sm">
+            <div class="card app-card action-card h-100">
                 <div class="card-body">
-                    <div class="text-muted">Total groups</div>
-                    <div class="display-6">@ViewBag.GroupCount</div>
+                    <h2 class="h5 mb-2">Groups</h2>
+                    <p class="text-muted">
+                        Create teams, add members, and manage group information.
+                    </p>
+
+                    <div class="mobile-stack d-sm-flex gap-2">
+                        <a asp-controller="Groups"
+                           asp-action="Index"
+                           class="btn btn-primary mobile-action">
+                            Open groups
+                        </a>
+
+                        <a asp-controller="Groups"
+                           asp-action="Create"
+                           class="btn btn-outline-primary mobile-action">
+                            Create group
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-md-6">
-            <div class="card shadow-sm">
+            <div class="card app-card action-card h-100">
                 <div class="card-body">
-                    <div class="text-muted">Upcoming practices</div>
-                    <div class="display-6">@ViewBag.UpcomingPracticeCount</div>
+                    <h2 class="h5 mb-2">Practices</h2>
+                    <p class="text-muted">
+                        Create practice sessions and check attendance answers.
+                    </p>
+
+                    <div class="mobile-stack d-sm-flex gap-2">
+                        <a asp-controller="Practices"
+                           asp-action="Index"
+                           class="btn btn-primary mobile-action">
+                            Open practices
+                        </a>
+
+                        <a asp-controller="Practices"
+                           asp-action="Create"
+                           class="btn btn-outline-primary mobile-action">
+                            Create practice
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card app-card">
         <div class="card-body">
-            <h2 class="h5 mb-3">Quick links</h2>
+            <h2 class="h5 mb-2">Simple workflow</h2>
 
-            <div class="d-flex flex-column flex-sm-row gap-2">
-                <a asp-controller="Groups" asp-action="Index" class="btn btn-primary">
-                    Groups
-                </a>
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="summary-box">
+                        <p class="summary-number">1</p>
+                        <div class="summary-label">Create a group</div>
+                    </div>
+                </div>
 
-                <a asp-controller="Practices" asp-action="Index" class="btn btn-outline-primary">
-                    Practices
-                </a>
+                <div class="col-12 col-md-4">
+                    <div class="summary-box">
+                        <p class="summary-number">2</p>
+                        <div class="summary-label">Add members</div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="summary-box">
+                        <p class="summary-number">3</p>
+                        <div class="summary-label">Mark attendance</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
