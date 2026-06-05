@@ -1,5 +1,8 @@
 namespace SquadCheck.Models;
 
+/// <summary>
+/// Represents a user who can belong to groups and mark attendance.
+/// </summary>
 public class User
 {
     public int Id { get; set; }
@@ -10,6 +13,13 @@ public class User
 
     public bool IsCoach { get; set; }
 
+    /// <summary>
+    /// Creates a user with validated contact details.
+    /// </summary>
+    /// <param name="id">The user id.</param>
+    /// <param name="fullName">The user's full name.</param>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="isCoach">Whether the user is a coach.</param>
     public User(int id, string fullName, string email, bool isCoach = false)
     {
         Id = id;
@@ -35,6 +45,11 @@ public class User
         IsCoach = isCoach;
     }
 
+    /// <summary>
+    /// Checks whether the user is a coach in the given group.
+    /// </summary>
+    /// <param name="group">The group to check.</param>
+    /// <returns>True if the user is a coach in the group, otherwise false.</returns>
     public bool IsLeaderOf(Group group)
     {
         if (group == null)
@@ -47,6 +62,12 @@ public class User
             member.Role == GroupRole.Coach);
     }
 
+    /// <summary>
+    /// Validates and trims required text values.
+    /// </summary>
+    /// <param name="value">The text value to validate.</param>
+    /// <param name="propertyName">The name used in the error message.</param>
+    /// <returns>The trimmed text value.</returns>
     private static string ValidateText(string value, string propertyName)
     {
         if (string.IsNullOrWhiteSpace(value))

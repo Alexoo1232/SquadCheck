@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SquadCheck.Models.ViewModels;
 
+/// <summary>
+/// Contains the form values needed to edit a practice session.
+/// </summary>
 public class EditPracticeSessionViewModel
 {
     [Required]

@@ -5,17 +5,29 @@ using SquadCheck.Models.ViewModels;
 
 namespace SquadCheck.Controllers;
 
+/// <summary>
+/// Handles group pages, group creation, and group member management.
+/// </summary>
 public class GroupsController : Controller
 {
     private readonly GroupManager _groupManager;
     private readonly PracticeManager _practiceManager;
 
+    /// <summary>
+    /// Creates a controller with the managers needed for groups and practices.
+    /// </summary>
+    /// <param name="groupManager">Manager used for groups, users, and memberships.</param>
+    /// <param name="practiceManager">Manager used to read practice sessions for groups.</param>
     public GroupsController(GroupManager groupManager, PracticeManager practiceManager)
     {
         _groupManager = groupManager;
         _practiceManager = practiceManager;
     }
 
+    /// <summary>
+    /// Shows all groups with member and practice counts.
+    /// </summary>
+    /// <returns>The group index view.</returns>
     public IActionResult Index()
     {
         List<Group> groups = _groupManager.GetAllGroups();
@@ -54,6 +66,11 @@ public class GroupsController : Controller
         return View(viewModel);
     }
 
+    /// <summary>
+    /// Shows one group with its members and practice sessions.
+    /// </summary>
+    /// <param name="id">The id of the group to show.</param>
+    /// <returns>The group details view, or a not found result.</returns>
     public IActionResult Details(int id)
     {
         Group? group = _groupManager.FindGroupById(id);
@@ -75,6 +92,10 @@ public class GroupsController : Controller
     }
 
     [HttpGet]
+    /// <summary>
+    /// Shows the form for creating a new group.
+    /// </summary>
+    /// <returns>The create group view.</returns>
     public IActionResult Create()
     {
         return View(new CreateGroupViewModel());
@@ -82,6 +103,11 @@ public class GroupsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// Creates a new group from the submitted form.
+    /// </summary>
+    /// <param name="viewModel">The posted group form values.</param>
+    /// <returns>A redirect to the group details page, or the form with validation errors.</returns>
     public IActionResult Create(CreateGroupViewModel viewModel)
     {
         if (!ModelState.IsValid)
@@ -112,6 +138,11 @@ public class GroupsController : Controller
     }
 
     [HttpGet]
+    /// <summary>
+    /// Shows the form for adding a member to a group.
+    /// </summary>
+    /// <param name="groupId">The id of the group that will receive the member.</param>
+    /// <returns>The add member view, or a not found result.</returns>
     public IActionResult AddMember(int groupId)
     {
         Group? group = _groupManager.FindGroupById(groupId);
@@ -134,6 +165,11 @@ public class GroupsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// Adds a user to a group, creating the user first if needed.
+    /// </summary>
+    /// <param name="viewModel">The posted member form values.</param>
+    /// <returns>A redirect to the group details page, or the form with validation errors.</returns>
     public IActionResult AddMember(AddMemberViewModel viewModel)
     {
         Group? group = _groupManager.FindGroupById(viewModel.GroupId);
@@ -201,6 +237,12 @@ public class GroupsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// Removes a member from a group.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    /// <param name="userId">The id of the user to remove.</param>
+    /// <returns>A redirect back to the group details page.</returns>
     public IActionResult RemoveMember(int groupId, int userId)
     {
         Group? group = _groupManager.FindGroupById(groupId);
@@ -226,6 +268,11 @@ public class GroupsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// Deletes a group and its related practice data.
+    /// </summary>
+    /// <param name="id">The id of the group to delete.</param>
+    /// <returns>A redirect to the group index page.</returns>
     public IActionResult Delete(int id)
     {
         bool deleted = _groupManager.DeleteGroup(id);

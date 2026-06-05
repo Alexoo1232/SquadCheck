@@ -3,6 +3,9 @@ using SquadCheck.Models;
 
 namespace SquadCheck.Models.ViewModels;
 
+/// <summary>
+/// Contains the form values needed to mark attendance for a practice session.
+/// </summary>
 public class MarkAttendanceViewModel
 {
     [Required]

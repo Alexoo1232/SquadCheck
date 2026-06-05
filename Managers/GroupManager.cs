@@ -3,15 +3,29 @@ using SquadCheck.Models;
 
 namespace SquadCheck.Managers;
 
+/// <summary>
+/// Handles users, groups, and group membership.
+/// </summary>
 public class GroupManager
 {
     private readonly IDataManager _dataManager;
 
+    /// <summary>
+    /// Creates a manager that uses the shared data manager for storage.
+    /// </summary>
+    /// <param name="dataManager">The data manager used to load and save data.</param>
     public GroupManager(IDataManager dataManager)
     {
         _dataManager = dataManager;
     }
 
+    /// <summary>
+    /// Creates a new user if the email is not already used.
+    /// </summary>
+    /// <param name="fullName">The user's full name.</param>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="isCoach">Whether the user should be marked as a coach.</param>
+    /// <returns>The created user.</returns>
     public User CreateUser(string fullName, string email, bool isCoach = false)
     {
         AppData data = _dataManager.LoadData();
@@ -52,6 +66,12 @@ public class GroupManager
         return data.Users.FirstOrDefault(user => user.Id == userId);
     }
 
+    /// <summary>
+    /// Creates a new group if the name is not already used.
+    /// </summary>
+    /// <param name="name">The group name.</param>
+    /// <param name="description">The optional group description.</param>
+    /// <returns>The created group.</returns>
     public Group CreateGroup(string name, string description = "")
     {
         AppData data = _dataManager.LoadData();
@@ -91,6 +111,13 @@ public class GroupManager
         return data.Groups.FirstOrDefault(group => group.Id == groupId);
     }
 
+    /// <summary>
+    /// Updates the name and description of an existing group.
+    /// </summary>
+    /// <param name="groupId">The id of the group to update.</param>
+    /// <param name="name">The new group name.</param>
+    /// <param name="description">The new group description.</param>
+    /// <returns>The updated group.</returns>
     public Group UpdateGroup(int groupId, string name, string description)
     {
         AppData data = _dataManager.LoadData();
@@ -118,6 +145,11 @@ public class GroupManager
         return group;
     }
 
+    /// <summary>
+    /// Deletes a group and removes practice and attendance data connected to it.
+    /// </summary>
+    /// <param name="groupId">The id of the group to delete.</param>
+    /// <returns>True if the group was deleted, otherwise false.</returns>
     public bool DeleteGroup(int groupId)
     {
         AppData data = _dataManager.LoadData();
@@ -143,6 +175,13 @@ public class GroupManager
         return true;
     }
 
+    /// <summary>
+    /// Adds an existing user to a group with the selected role.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    /// <param name="userId">The id of the user.</param>
+    /// <param name="role">The user's role in the group.</param>
+    /// <returns>The created group membership.</returns>
     public GroupMember AddMemberToGroup(int groupId, int userId, GroupRole role = GroupRole.Member)
     {
         AppData data = _dataManager.LoadData();
@@ -183,6 +222,12 @@ public class GroupManager
         return member;
     }
 
+    /// <summary>
+    /// Removes a user from a group and clears related attendance answers.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    /// <param name="userId">The id of the user to remove.</param>
+    /// <returns>True if the member was removed, otherwise false.</returns>
     public bool RemoveMemberFromGroup(int groupId, int userId)
     {
         AppData data = _dataManager.LoadData();

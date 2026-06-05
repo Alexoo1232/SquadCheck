@@ -3,8 +3,15 @@ using SquadCheck.Managers;
 
 namespace SquadCheck
 {
+    /// <summary>
+    /// Starts the SquadCheck web application and configures its services and request pipeline.
+    /// </summary>
     public class Program
     {
+        /// <summary>
+        /// Configures dependency injection, middleware, routes, and then runs the application.
+        /// </summary>
+        /// <param name="args">Command-line arguments passed to the application.</param>
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);

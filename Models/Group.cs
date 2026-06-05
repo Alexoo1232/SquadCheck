@@ -1,5 +1,8 @@
 namespace SquadCheck.Models;
 
+/// <summary>
+/// Represents a sports group or team.
+/// </summary>
 public class Group
 {
     public int Id { get; set; }
@@ -10,6 +13,12 @@ public class Group
 
     public List<GroupMember> Members { get; set; }
 
+    /// <summary>
+    /// Creates a group with a name, description, and empty member list.
+    /// </summary>
+    /// <param name="id">The group id.</param>
+    /// <param name="name">The group name.</param>
+    /// <param name="description">The optional group description.</param>
     public Group(int id, string name, string description = "")
     {
         Id = id;
@@ -66,6 +75,11 @@ public class Group
         return Members.Any(member => member.UserId == userId);
     }
 
+    /// <summary>
+    /// Validates and trims a group name.
+    /// </summary>
+    /// <param name="name">The group name to validate.</param>
+    /// <returns>The trimmed group name.</returns>
     private static string ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))

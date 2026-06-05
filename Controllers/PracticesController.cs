@@ -6,12 +6,21 @@ using SquadCheck.Models.ViewModels;
 
 namespace SquadCheck.Controllers;
 
+/// <summary>
+/// Handles practice session pages, creation, editing, and cancellation.
+/// </summary>
 public class PracticesController : Controller
 {
     private readonly PracticeManager _practiceManager;
     private readonly GroupManager _groupManager;
     private readonly AttendanceManager _attendanceManager;
 
+    /// <summary>
+    /// Creates a controller with the managers needed for practices and attendance.
+    /// </summary>
+    /// <param name="practiceManager">Manager used for practice sessions.</param>
+    /// <param name="groupManager">Manager used to read groups and members.</param>
+    /// <param name="attendanceManager">Manager used to read attendance data.</param>
     public PracticesController(
         PracticeManager practiceManager,
         GroupManager groupManager,
@@ -22,6 +31,10 @@ public class PracticesController : Controller
         _attendanceManager = attendanceManager;
     }
 
+    /// <summary>
+    /// Shows all practice sessions.
+    /// </summary>
+    /// <returns>The practice index view.</returns>
     public IActionResult Index()
     {
         List<PracticeSession> sessions = _practiceManager.GetAllSessions();
@@ -29,6 +42,11 @@ public class PracticesController : Controller
         return View(sessions);
     }
 
+    /// <summary>
+    /// Shows one practice session with group and attendance information.
+    /// </summary>
+    /// <param name="id">The id of the practice session to show.</param>
+    /// <returns>The practice details view, or a not found result.</returns>
     public IActionResult Details(int id)
     {
         PracticeSession? practiceSession = _practiceManager.FindSessionById(id);
@@ -63,6 +81,11 @@ public class PracticesController : Controller
     }
 
     [HttpGet]
+    /// <summary>
+    /// Shows the form for creating a practice session.
+    /// </summary>
+    /// <param name="groupId">An optional group id to preselect in the form.</param>
+    /// <returns>The create practice view, a redirect, or a not found result.</returns>
     public IActionResult Create(int? groupId)
     {
         List<Group> groups = _groupManager.GetAllGroups();
@@ -94,6 +117,11 @@ public class PracticesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// Creates a practice session from the submitted form.
+    /// </summary>
+    /// <param name="viewModel">The posted practice form values.</param>
+    /// <returns>A redirect to practice details, or the form with validation errors.</returns>
     public IActionResult Create(CreatePracticeSessionViewModel viewModel)
     {
         if (!ModelState.IsValid)
@@ -131,6 +159,11 @@ public class PracticesController : Controller
     }
 
     [HttpGet]
+    /// <summary>
+    /// Shows the edit form for a practice session.
+    /// </summary>
+    /// <param name="id">The id of the practice session to edit.</param>
+    /// <returns>The edit practice view, or a not found result.</returns>
     public IActionResult Edit(int id)
     {
         PracticeSession? practiceSession = _practiceManager.FindSessionById(id);
@@ -158,6 +191,11 @@ public class PracticesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// Updates a practice session from the submitted edit form.
+    /// </summary>
+    /// <param name="viewModel">The posted edit form values.</param>
+    /// <returns>A redirect to practice details, or the form with validation errors.</returns>
     public IActionResult Edit(EditPracticeSessionViewModel viewModel)
     {
         if (!ModelState.IsValid)
@@ -196,6 +234,11 @@ public class PracticesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// Cancels a practice session and removes its related attendance answers.
+    /// </summary>
+    /// <param name="id">The id of the practice session to cancel.</param>
+    /// <returns>A redirect to the group details page or practice index page.</returns>
     public IActionResult Cancel(int id)
     {
         PracticeSession? practiceSession = _practiceManager.FindSessionById(id);
@@ -220,6 +263,10 @@ public class PracticesController : Controller
         return RedirectToAction("Index");
     }
 
+    /// <summary>
+    /// Prepares the group dropdown used by the create and edit forms.
+    /// </summary>
+    /// <param name="selectedGroupId">The group id that should be selected in the dropdown.</param>
     private void PrepareGroupSelectList(int? selectedGroupId = null)
     {
         List<Group> groups = _groupManager.GetAllGroups();

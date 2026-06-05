@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SquadCheck.Models.ViewModels;
 
+/// <summary>
+/// Contains the form values needed to create a group.
+/// </summary>
 public class CreateGroupViewModel
 {
     [Required(ErrorMessage = "Group name is required.")]

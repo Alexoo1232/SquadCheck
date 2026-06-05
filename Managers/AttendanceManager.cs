@@ -3,15 +3,30 @@ using SquadCheck.Models;
 
 namespace SquadCheck.Managers;
 
+/// <summary>
+/// Handles attendance rules and attendance summaries for practice sessions.
+/// </summary>
 public class AttendanceManager
 {
     private readonly IDataManager _dataManager;
 
+    /// <summary>
+    /// Creates a manager that uses the shared data manager for storage.
+    /// </summary>
+    /// <param name="dataManager">The data manager used to load and save data.</param>
     public AttendanceManager(IDataManager dataManager)
     {
         _dataManager = dataManager;
     }
 
+    /// <summary>
+    /// Creates or updates one user's attendance answer for a practice session.
+    /// </summary>
+    /// <param name="practiceSessionId">The id of the practice session.</param>
+    /// <param name="userId">The id of the user marking attendance.</param>
+    /// <param name="status">The attendance status to save.</param>
+    /// <param name="comment">An optional comment from the user.</param>
+    /// <returns>The created or updated attendance record.</returns>
     public Attendance MarkAttendance(
         int practiceSessionId,
         int userId,
@@ -69,6 +84,11 @@ public class AttendanceManager
         return existingAttendance;
     }
 
+    /// <summary>
+    /// Gets all attendance records for a practice session.
+    /// </summary>
+    /// <param name="practiceSessionId">The id of the practice session.</param>
+    /// <returns>The attendance records sorted by user id.</returns>
     public List<Attendance> GetAttendanceForSession(int practiceSessionId)
     {
         AppData data = _dataManager.LoadData();
@@ -85,6 +105,11 @@ public class AttendanceManager
             .ToList();
     }
 
+    /// <summary>
+    /// Gets all attendance records made by one user.
+    /// </summary>
+    /// <param name="userId">The id of the user.</param>
+    /// <returns>The user's attendance records sorted by newest update first.</returns>
     public List<Attendance> GetAttendanceForUser(int userId)
     {
         AppData data = _dataManager.LoadData();
@@ -101,6 +126,11 @@ public class AttendanceManager
             .ToList();
     }
 
+    /// <summary>
+    /// Calculates attendance totals for a practice session.
+    /// </summary>
+    /// <param name="practiceSessionId">The id of the practice session.</param>
+    /// <returns>A summary with going, not going, maybe, and no response counts.</returns>
     public AttendanceSummary GetSummary(int practiceSessionId)
     {
         AppData data = _dataManager.LoadData();
@@ -146,6 +176,12 @@ public class AttendanceManager
         };
     }
 
+    /// <summary>
+    /// Checks whether a user belongs to the group connected to a practice session.
+    /// </summary>
+    /// <param name="practiceSessionId">The id of the practice session.</param>
+    /// <param name="userId">The id of the user.</param>
+    /// <returns>True if the user can access the session, otherwise false.</returns>
     public bool CanUserAccessSession(int practiceSessionId, int userId)
     {
         AppData data = _dataManager.LoadData();
@@ -167,6 +203,12 @@ public class AttendanceManager
         return group.HasMember(userId);
     }
 
+    /// <summary>
+    /// Stops users outside the group from marking attendance.
+    /// </summary>
+    /// <param name="data">The loaded application data.</param>
+    /// <param name="practiceSessionId">The id of the practice session.</param>
+    /// <param name="userId">The id of the user.</param>
     private static void ValidateMemberAccess(AppData data, int practiceSessionId, int userId)
     {
         PracticeSession? session = data.PracticeSessions

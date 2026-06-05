@@ -5,12 +5,21 @@ using SquadCheck.Models.ViewModels;
 
 namespace SquadCheck.Controllers;
 
+/// <summary>
+/// Handles attendance form submissions and attendance summary pages.
+/// </summary>
 public class AttendanceController : Controller
 {
     private readonly AttendanceManager _attendanceManager;
     private readonly PracticeManager _practiceManager;
     private readonly GroupManager _groupManager;
 
+    /// <summary>
+    /// Creates a controller with the managers needed for attendance pages.
+    /// </summary>
+    /// <param name="attendanceManager">Manager used to save and read attendance.</param>
+    /// <param name="practiceManager">Manager used to find practice sessions.</param>
+    /// <param name="groupManager">Manager used to find groups and members.</param>
     public AttendanceController(
         AttendanceManager attendanceManager,
         PracticeManager practiceManager,
@@ -23,6 +32,11 @@ public class AttendanceController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    /// <summary>
+    /// Saves or updates a member's attendance answer for a practice session.
+    /// </summary>
+    /// <param name="viewModel">The posted attendance form values.</param>
+    /// <returns>A redirect back to the practice details page.</returns>
     public IActionResult Mark(MarkAttendanceViewModel viewModel)
     {
         int practiceSessionId = viewModel.PracticeSessionId;
@@ -64,6 +78,11 @@ public class AttendanceController : Controller
         }
     }
 
+    /// <summary>
+    /// Shows the full attendance summary for one practice session.
+    /// </summary>
+    /// <param name="practiceSessionId">The id of the practice session to summarize.</param>
+    /// <returns>The attendance summary view, or a not found result.</returns>
     public IActionResult Summary(int practiceSessionId)
     {
         PracticeSession? practiceSession = _practiceManager.FindSessionById(practiceSessionId);

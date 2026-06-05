@@ -2,6 +2,9 @@ using SquadCheck.Models;
 
 namespace SquadCheck.Models.ViewModels;
 
+/// <summary>
+/// Contains all data needed by the group details page.
+/// </summary>
 public class GroupDetailsViewModel
 {
     public Group Group { get; set; } = new Group();

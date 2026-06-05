@@ -1,5 +1,8 @@
 namespace SquadCheck.Models;
 
+/// <summary>
+/// Stores all data that is saved to and loaded from the JSON data file.
+/// </summary>
 public class AppData
 {
     public List<User> Users { get; set; }

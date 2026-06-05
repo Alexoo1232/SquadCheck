@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SquadCheck.Models.ViewModels;
 
+/// <summary>
+/// Contains the form values needed to create a practice session.
+/// </summary>
 public class CreatePracticeSessionViewModel
 {
     [Required(ErrorMessage = "Group is required.")]

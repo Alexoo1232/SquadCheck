@@ -1,5 +1,8 @@
 namespace SquadCheck.Models;
 
+/// <summary>
+/// Connects a user to a group with a role.
+/// </summary>
 public class GroupMember
 {
     public int Id { get; set; }
@@ -12,6 +15,13 @@ public class GroupMember
 
     public DateTime JoinedAt { get; set; }
 
+    /// <summary>
+    /// Creates a group membership.
+    /// </summary>
+    /// <param name="id">The membership id.</param>
+    /// <param name="groupId">The group id.</param>
+    /// <param name="userId">The user id.</param>
+    /// <param name="role">The user's role in the group.</param>
     public GroupMember(int id, int groupId, int userId, GroupRole role = GroupRole.Member)
     {
         if (groupId <= 0)

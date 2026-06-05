@@ -1,5 +1,8 @@
 namespace SquadCheck.Models;
 
+/// <summary>
+/// Represents one scheduled practice session for a group.
+/// </summary>
 public class PracticeSession
 {
     public int Id { get; set; }
@@ -16,6 +19,16 @@ public class PracticeSession
 
     public int? MaxParticipants { get; set; }
 
+    /// <summary>
+    /// Creates a practice session with validated details.
+    /// </summary>
+    /// <param name="id">The practice session id.</param>
+    /// <param name="groupId">The id of the group that owns the session.</param>
+    /// <param name="title">The practice title.</param>
+    /// <param name="startTime">The practice start time.</param>
+    /// <param name="endTime">The practice end time.</param>
+    /// <param name="location">The practice location.</param>
+    /// <param name="maxParticipants">The optional maximum participant count.</param>
     public PracticeSession(
         int id,
         int groupId,
@@ -64,6 +77,11 @@ public class PracticeSession
         return StartTime > DateTime.Now;
     }
 
+    /// <summary>
+    /// Checks whether one more going answer can be accepted.
+    /// </summary>
+    /// <param name="currentGoingCount">The current number of going answers.</param>
+    /// <returns>True if another going answer can be saved, otherwise false.</returns>
     public bool CanAcceptGoing(int currentGoingCount)
     {
         if (currentGoingCount < 0)
@@ -79,6 +97,11 @@ public class PracticeSession
         return currentGoingCount < MaxParticipants.Value;
     }
 
+    /// <summary>
+    /// Validates and assigns the start and end times.
+    /// </summary>
+    /// <param name="startTime">The start time.</param>
+    /// <param name="endTime">The end time.</param>
     private void SetTime(DateTime startTime, DateTime endTime)
     {
         if (endTime <= startTime)
@@ -90,6 +113,12 @@ public class PracticeSession
         EndTime = endTime;
     }
 
+    /// <summary>
+    /// Validates and trims required text values.
+    /// </summary>
+    /// <param name="value">The text value to validate.</param>
+    /// <param name="propertyName">The name used in the error message.</param>
+    /// <returns>The trimmed text value.</returns>
     private static string ValidateText(string value, string propertyName)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -100,6 +129,11 @@ public class PracticeSession
         return value.Trim();
     }
 
+    /// <summary>
+    /// Validates the optional participant limit.
+    /// </summary>
+    /// <param name="maxParticipants">The participant limit to validate.</param>
+    /// <returns>The validated participant limit.</returns>
     private static int? ValidateMaxParticipants(int? maxParticipants)
     {
         if (maxParticipants != null && maxParticipants <= 0)

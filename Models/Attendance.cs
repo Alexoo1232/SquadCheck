@@ -1,5 +1,8 @@
 namespace SquadCheck.Models;
 
+/// <summary>
+/// Represents one user's attendance answer for one practice session.
+/// </summary>
 public class Attendance
 {
     public int Id { get; set; }
@@ -14,6 +17,14 @@ public class Attendance
 
     public string? Comment { get; set; }
 
+    /// <summary>
+    /// Creates a new attendance answer.
+    /// </summary>
+    /// <param name="id">The attendance id.</param>
+    /// <param name="practiceSessionId">The practice session id.</param>
+    /// <param name="userId">The user id.</param>
+    /// <param name="status">The selected attendance status.</param>
+    /// <param name="comment">An optional attendance comment.</param>
     public Attendance(
         int id,
         int practiceSessionId,
@@ -57,6 +68,11 @@ public class Attendance
         return Status != AttendanceStatus.NoResponse;
     }
 
+    /// <summary>
+    /// Cleans optional comments before they are stored.
+    /// </summary>
+    /// <param name="comment">The comment text to clean.</param>
+    /// <returns>The cleaned comment, or null when the comment is empty.</returns>
     private static string? FormatComment(string? comment)
     {
         if (string.IsNullOrWhiteSpace(comment))

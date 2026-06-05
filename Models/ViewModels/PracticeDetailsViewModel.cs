@@ -2,6 +2,9 @@ using SquadCheck.Models;
 
 namespace SquadCheck.Models.ViewModels;
 
+/// <summary>
+/// Contains all data needed by the practice details and attendance summary pages.
+/// </summary>
 public class PracticeDetailsViewModel
 {
     public PracticeSession PracticeSession { get; set; } = new PracticeSession();

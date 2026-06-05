@@ -3,15 +3,32 @@ using SquadCheck.Models;
 
 namespace SquadCheck.Managers;
 
+/// <summary>
+/// Handles creation, lookup, updating, and cancellation of practice sessions.
+/// </summary>
 public class PracticeManager
 {
     private readonly IDataManager _dataManager;
 
+    /// <summary>
+    /// Creates a manager that uses the shared data manager for storage.
+    /// </summary>
+    /// <param name="dataManager">The data manager used to load and save data.</param>
     public PracticeManager(IDataManager dataManager)
     {
         _dataManager = dataManager;
     }
 
+    /// <summary>
+    /// Creates a new practice session for a group.
+    /// </summary>
+    /// <param name="groupId">The id of the group that owns the session.</param>
+    /// <param name="title">The practice title.</param>
+    /// <param name="startTime">The practice start time.</param>
+    /// <param name="endTime">The practice end time.</param>
+    /// <param name="location">The practice location.</param>
+    /// <param name="maxParticipants">The optional maximum number of going participants.</param>
+    /// <returns>The created practice session.</returns>
     public PracticeSession CreateSession(
         int groupId,
         string title,
@@ -86,6 +103,11 @@ public class PracticeManager
             .ToList();
     }
 
+    /// <summary>
+    /// Gets all practice sessions available to a user through group membership.
+    /// </summary>
+    /// <param name="userId">The id of the user.</param>
+    /// <returns>The user's practice sessions sorted by start time.</returns>
     public List<PracticeSession> GetSessionsForUser(int userId)
     {
         AppData data = _dataManager.LoadData();
@@ -107,6 +129,16 @@ public class PracticeManager
             .ToList();
     }
 
+    /// <summary>
+    /// Updates the editable details of a practice session.
+    /// </summary>
+    /// <param name="sessionId">The id of the practice session to update.</param>
+    /// <param name="title">The updated title.</param>
+    /// <param name="startTime">The updated start time.</param>
+    /// <param name="endTime">The updated end time.</param>
+    /// <param name="location">The updated location.</param>
+    /// <param name="maxParticipants">The updated optional participant limit.</param>
+    /// <returns>The updated practice session.</returns>
     public PracticeSession UpdateSession(
         int sessionId,
         string title,
@@ -135,6 +167,11 @@ public class PracticeManager
         return session;
     }
 
+    /// <summary>
+    /// Cancels a practice session and removes its attendance answers.
+    /// </summary>
+    /// <param name="sessionId">The id of the practice session to cancel.</param>
+    /// <returns>True if the session was cancelled, otherwise false.</returns>
     public bool CancelSession(int sessionId)
     {
         AppData data = _dataManager.LoadData();
