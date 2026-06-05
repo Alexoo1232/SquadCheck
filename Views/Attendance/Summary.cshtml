@@ -80,10 +80,10 @@
             else
             {
                 <div class="list-group">
-                    @foreach (var member in Model.Members)
+                    @foreach (GroupMember member in Model.Members)
                     {
-                        var user = Model.Users.FirstOrDefault(user => user.Id == member.UserId);
-                        var attendance = Model.Attendances.FirstOrDefault(attendance => attendance.UserId == member.UserId);
+                        User? user = Model.Users.FirstOrDefault(user => user.Id == member.UserId);
+                        Attendance? attendance = Model.Attendances.FirstOrDefault(attendance => attendance.UserId == member.UserId);
 
                         <div class="list-group-item">
                             <div class="d-flex justify-content-between align-items-start gap-3">
