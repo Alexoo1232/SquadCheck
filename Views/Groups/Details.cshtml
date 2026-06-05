@@ -41,18 +41,18 @@
                     }
                 </div>
 
-                <div class="d-flex flex-column flex-sm-row gap-2">
+                <div class="d-flex flex-column flex-sm-row gap-2 card-actions">
                     <a asp-controller="Groups"
                        asp-action="AddMember"
                        asp-route-groupId="@Model.Group.Id"
-                       class="btn btn-primary">
+                       class="btn btn-primary mobile-action">
                         Add member
                     </a>
 
                     <a asp-controller="Practices"
                        asp-action="Create"
                        asp-route-groupId="@Model.Group.Id"
-                       class="btn btn-outline-primary">
+                       class="btn btn-outline-primary mobile-action">
                         Create practice
                     </a>
                 </div>
