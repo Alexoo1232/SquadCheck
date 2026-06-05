@@ -1,19 +1,39 @@
 html {
     font-size: 16px;
+    min-height: 100%;
+    scrollbar-gutter: stable;
 }
 
 body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     background-color: #f7f8fa;
     color: #222;
 }
 
 .main-content {
-    padding-bottom: 4rem;
+    flex: 1 0 auto;
+    padding: 0 0 4rem;
 }
 
 .footer {
+    margin-top: auto;
     padding: 1rem 0;
-    margin-top: 3rem;
+    flex-shrink: 0;
+}
+
+.navbar {
+    flex-shrink: 0;
+}
+
+.navbar-nav {
+    gap: 0.25rem;
+}
+
+.nav-link {
+    border-radius: 0.65rem;
+    padding-inline: 0.85rem;
 }
 
 .navbar-brand {
@@ -56,8 +76,37 @@ body {
 
 .mobile-action {
     min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 0.75rem;
     font-weight: 600;
+}
+
+.mobile-stack {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.action-card .mobile-action,
+.empty-state .mobile-action {
+    width: 100%;
+}
+
+.card-actions {
+    align-items: flex-start;
+}
+
+.card-actions > * {
+    flex: 0 0 auto;
+}
+
+.card-actions form {
+    margin: 0;
+}
+
+.card-actions .mobile-action {
+    width: auto;
 }
 
 .info-label {
@@ -124,12 +173,24 @@ body {
         padding: 1rem;
     }
 
-    .btn {
+    .mobile-stack .mobile-action,
+    .d-grid > .btn,
+    .d-grid > a.btn,
+    .empty-state .mobile-action,
+    .card-actions .mobile-action,
+    .card-actions form {
         width: 100%;
     }
+}
 
+@media (min-width: 576px) {
     .mobile-stack {
-        display: grid;
-        gap: 0.75rem;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .mobile-stack .mobile-action {
+        flex: 1 1 0;
+        width: auto;
     }
 }
