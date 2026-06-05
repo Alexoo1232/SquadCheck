@@ -39,19 +39,91 @@
 
                         <div class="mb-3">
                             <label asp-for="StartTime" class="form-label"></label>
-                            <input asp-for="StartTime"
-                                   type="datetime-local"
-                                   class="form-control"
-                                   value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" />
+                            <input asp-for="StartTime" type="hidden" value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" />
+                            <div class="row g-2">
+                                <div class="col-12 col-md-6">
+                                    <input id="StartDate"
+                                           type="date"
+                                           class="form-control"
+                                           value="@Model.StartTime.ToString("yyyy-MM-dd")" />
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <select id="StartHour" class="form-select">
+                                        @for (int hour = 0; hour < 24; hour++)
+                                        {
+                                            if (hour == Model.StartTime.Hour)
+                                            {
+                                                <option value="@hour.ToString("D2")" selected>@hour.ToString("D2")</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@hour.ToString("D2")">@hour.ToString("D2")</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <select id="StartMinute" class="form-select">
+                                        @for (int minute = 0; minute < 60; minute += 10)
+                                        {
+                                            string minuteValue = minute.ToString("D2");
+                                            if (minute == Model.StartTime.Minute)
+                                            {
+                                                <option value="@minuteValue" selected>@minuteValue</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@minuteValue">@minuteValue</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
                             <span asp-validation-for="StartTime" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="EndTime" class="form-label"></label>
-                            <input asp-for="EndTime"
-                                   type="datetime-local"
-                                   class="form-control"
-                                   value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" />
+                            <input asp-for="EndTime" type="hidden" value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" />
+                            <div class="row g-2">
+                                <div class="col-12 col-md-6">
+                                    <input id="EndDate"
+                                           type="date"
+                                           class="form-control"
+                                           value="@Model.EndTime.ToString("yyyy-MM-dd")" />
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <select id="EndHour" class="form-select">
+                                        @for (int hour = 0; hour < 24; hour++)
+                                        {
+                                            if (hour == Model.EndTime.Hour)
+                                            {
+                                                <option value="@hour.ToString("D2")" selected>@hour.ToString("D2")</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@hour.ToString("D2")">@hour.ToString("D2")</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <select id="EndMinute" class="form-select">
+                                        @for (int minute = 0; minute < 60; minute += 10)
+                                        {
+                                            string minuteValue = minute.ToString("D2");
+                                            if (minute == Model.EndTime.Minute)
+                                            {
+                                                <option value="@minuteValue" selected>@minuteValue</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@minuteValue">@minuteValue</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
                             <span asp-validation-for="EndTime" class="text-danger"></span>
                         </div>
 
@@ -86,3 +158,37 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            function syncDateTime(hiddenId, dateId, hourId, minuteId) {
+                const hidden = document.getElementById(hiddenId);
+                const date = document.getElementById(dateId);
+                const hour = document.getElementById(hourId);
+                const minute = document.getElementById(minuteId);
+
+                if (!hidden || !date || !hour || !minute) {
+                    return;
+                }
+
+                const value = date.value ? `${date.value}T${hour.value}:${minute.value}` : "";
+                hidden.value = value;
+            }
+
+            function bind(hiddenId, dateId, hourId, minuteId) {
+                const update = function () {
+                    syncDateTime(hiddenId, dateId, hourId, minuteId);
+                };
+
+                document.getElementById(dateId)?.addEventListener("change", update);
+                document.getElementById(hourId)?.addEventListener("change", update);
+                document.getElementById(minuteId)?.addEventListener("change", update);
+                update();
+            }
+
+            bind("StartTime", "StartDate", "StartHour", "StartMinute");
+            bind("EndTime", "EndDate", "EndHour", "EndMinute");
+        })();
+    </script>
+}
