@@ -1,31 +1,135 @@
 html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
     font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    background-color: #f7f8fa;
+    color: #222;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.main-content {
+    padding-bottom: 4rem;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.footer {
+    padding: 1rem 0;
+    margin-top: 3rem;
+}
+
+.navbar-brand {
+    letter-spacing: -0.02em;
+}
+
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.app-card {
+    border: 1px solid #e6e8eb;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.app-card .card-body {
+    padding: 1.25rem;
+}
+
+.action-card {
+    transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+}
+
+.action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.mobile-action {
+    min-height: 44px;
+    border-radius: 0.75rem;
+    font-weight: 600;
+}
+
+.info-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+}
+
+.info-value {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.summary-box {
+    border: 1px solid #e6e8eb;
+    border-radius: 0.9rem;
+    padding: 1rem;
+    text-align: center;
+    background-color: #fff;
+}
+
+.summary-number {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.summary-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.form-control,
+.form-select,
+.btn {
+    border-radius: 0.75rem;
+}
+
+.btn {
+    min-height: 42px;
+}
+
+@media (max-width: 575.98px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .app-card .card-body {
+        padding: 1rem;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .mobile-stack {
+        display: grid;
+        gap: 0.75rem;
+    }
 }
