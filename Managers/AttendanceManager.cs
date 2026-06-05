@@ -53,9 +53,6 @@ public class AttendanceManager
                 comment);
 
             data.Attendances.Add(attendance);
-            session.AddOrUpdateAttendance(attendance);
-
-            SyncSessionAttendanceInsideGroup(data, session, attendance);
 
             _dataManager.SaveData(data);
 
@@ -63,9 +60,6 @@ public class AttendanceManager
         }
 
         existingAttendance.ChangeStatus(status, comment);
-        session.AddOrUpdateAttendance(existingAttendance);
-
-        SyncSessionAttendanceInsideGroup(data, session, existingAttendance);
 
         _dataManager.SaveData(data);
 
@@ -178,18 +172,5 @@ public class AttendanceManager
         {
             throw new InvalidOperationException("Only group members can mark attendance for this practice session.");
         }
-    }
-
-    private static void SyncSessionAttendanceInsideGroup(
-        AppData data,
-        PracticeSession session,
-        Attendance attendance)
-    {
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == session.GroupId);
-
-        PracticeSession? groupSession = group?.PracticeSessions
-            .FirstOrDefault(item => item.Id == session.Id);
-
-        groupSession?.AddOrUpdateAttendance(attendance);
     }
 }

@@ -35,7 +35,6 @@ public class PracticeManager
             maxParticipants);
 
         data.PracticeSessions.Add(session);
-        group.AddPracticeSession(session);
 
         _dataManager.SaveData(data);
 
@@ -127,20 +126,6 @@ public class PracticeManager
             location,
             maxParticipants);
 
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == session.GroupId);
-
-        PracticeSession? groupSession = group?.PracticeSessions.FirstOrDefault(item => item.Id == sessionId);
-
-        if (groupSession != null)
-        {
-            groupSession.UpdateSessionDetails(
-                title,
-                startTime,
-                endTime,
-                location,
-                maxParticipants);
-        }
-
         _dataManager.SaveData(data);
 
         return session;
@@ -160,13 +145,6 @@ public class PracticeManager
         data.Attendances.RemoveAll(attendance => attendance.PracticeSessionId == sessionId);
 
         data.PracticeSessions.Remove(session);
-
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == session.GroupId);
-
-        if (group != null)
-        {
-            group.PracticeSessions.RemoveAll(item => item.Id == sessionId);
-        }
 
         _dataManager.SaveData(data);
 

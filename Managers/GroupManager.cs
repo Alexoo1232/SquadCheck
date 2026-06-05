@@ -203,11 +203,6 @@ public class GroupManager
             attendance.UserId == userId &&
             groupSessionIds.Contains(attendance.PracticeSessionId));
 
-        foreach (PracticeSession session in data.PracticeSessions.Where(session => session.GroupId == groupId))
-        {
-            session.Attendances.RemoveAll(attendance => attendance.UserId == userId);
-        }
-
         _dataManager.SaveData(data);
 
         return true;
