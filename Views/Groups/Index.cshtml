@@ -1,4 +1,4 @@
-@model List<SquadCheck.Models.Group>
+@model List<SquadCheck.Models.ViewModels.GroupListItemViewModel>
 
 @{
     ViewData["Title"] = "Groups";
@@ -54,24 +54,29 @@
     else
     {
         <div class="row g-3">
-            @foreach (var group in Model)
+            @foreach (var item in Model)
             {
                 var upcomingCount = group.PracticeSessions.Count(session => session.IsUpcoming());
 
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="card app-card action-card h-100">
                         <div class="card-body">
-                            <h2 class="h5 mb-2">@group.Name</h2>
+                            <h2 class="h5 mb-2">@item.Group.Name</h2>
 
-                            @if (!string.IsNullOrWhiteSpace(group.Description))
+                            @if (!string.IsNullOrWhiteSpace(item.Group.Description))
                             {
+<<<<<<< HEAD
                                 <p class="text-muted mb-3">@group.Description</p>
+=======
+                                <p class="text-muted">@item.Group.Description</p>
+>>>>>>> 39eb877 (Updated the groups index to use summary view model and aligned controller naming)
                             }
                             else
                             {
                                 <p class="text-muted mb-3">No description added.</p>
                             }
 
+<<<<<<< HEAD
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <div class="summary-box">
@@ -93,6 +98,25 @@
                                asp-route-id="@group.Id"
                                class="btn btn-outline-primary mobile-action">
                                 Open
+=======
+                            <p class="mb-1">
+                                <strong>Members:</strong> @item.MemberCount
+                            </p>
+
+                            <p class="mb-1">
+                                <strong>Practices:</strong> @item.PracticeCount
+                            </p>
+
+                            <p class="mb-3">
+                                <strong>Upcoming:</strong> @item.UpcomingPracticeCount
+                            </p>
+
+                            <a asp-controller="Groups"
+                               asp-action="Details"
+                               asp-route-id="@item.Group.Id"
+                               class="btn btn-outline-primary w-100">
+                                Open group
+>>>>>>> 39eb877 (Updated the groups index to use summary view model and aligned controller naming)
                             </a>
                         </div>
                     </div>

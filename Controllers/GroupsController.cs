@@ -19,8 +19,26 @@ public class GroupsController : Controller
     public IActionResult Index()
     {
         List<Group> groups = _groupManager.GetAllGroups();
+        List<PracticeSession> sessions = _practiceManager.GetAllSessions();
 
-        return View(groups);
+        List<GroupListItemViewModel> viewModel = groups
+            .Select(group =>
+            {
+                List<PracticeSession> groupSessions = sessions
+                    .Where(session => session.GroupId == group.Id)
+                    .ToList();
+
+                return new GroupListItemViewModel
+                {
+                    Group = group,
+                    MemberCount = group.Members.Count,
+                    PracticeCount = groupSessions.Count,
+                    UpcomingPracticeCount = groupSessions.Count(session => session.IsUpcoming())
+                };
+            })
+            .ToList();
+
+        return View(viewModel);
     }
 
     public IActionResult Details(int id)
