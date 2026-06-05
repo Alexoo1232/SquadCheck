@@ -25,14 +25,14 @@ public class DataManager : IDataManager
             PropertyNameCaseInsensitive = true
         };
 
-        EnsureDataFolderExists();
+        CreateDataFolderIfMissing();
     }
 
     public AppData LoadData()
     {
         try
         {
-            if (!DataFileExists())
+            if (!File.Exists(_dataFilePath))
             {
                 return new AppData();
             }
@@ -46,7 +46,12 @@ public class DataManager : IDataManager
 
             AppData? data = JsonSerializer.Deserialize<AppData>(json, _jsonOptions);
 
-            return data ?? new AppData();
+            if (data == null)
+            {
+                return new AppData();
+            }
+
+            return data;
         }
         catch (JsonException)
         {
@@ -71,7 +76,7 @@ public class DataManager : IDataManager
 
         try
         {
-            EnsureDataFolderExists();
+            CreateDataFolderIfMissing();
 
             string json = JsonSerializer.Serialize(data, _jsonOptions);
 
@@ -92,9 +97,11 @@ public class DataManager : IDataManager
         return File.Exists(_dataFilePath);
     }
 
-    private void EnsureDataFolderExists()
+    private void CreateDataFolderIfMissing()
     {
-        if (!Directory.Exists(_dataFolderPath))
+        bool folderExists = Directory.Exists(_dataFolderPath);
+
+        if (!folderExists)
         {
             Directory.CreateDirectory(_dataFolderPath);
         }
