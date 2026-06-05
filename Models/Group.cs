@@ -10,15 +10,12 @@ public class Group
 
     public List<GroupMember> Members { get; set; }
 
-    public List<PracticeSession> PracticeSessions { get; set; }
-
     public Group(int id, string name, string description = "")
     {
         Id = id;
         Name = ValidateName(name);
         Description = description.Trim();
         Members = new List<GroupMember>();
-        PracticeSessions = new List<PracticeSession>();
     }
 
     public Group()
@@ -26,7 +23,6 @@ public class Group
         Name = string.Empty;
         Description = string.Empty;
         Members = new List<GroupMember>();
-        PracticeSessions = new List<PracticeSession>();
     }
 
     public void UpdateGroupDetails(string name, string description)
@@ -68,24 +64,6 @@ public class Group
     public bool HasMember(int userId)
     {
         return Members.Any(member => member.UserId == userId);
-    }
-
-    public void AddPracticeSession(PracticeSession practiceSession)
-    {
-        if (practiceSession == null)
-        {
-            throw new ArgumentNullException(nameof(practiceSession));
-        }
-
-        PracticeSessions.Add(practiceSession);
-    }
-
-    public List<PracticeSession> GetUpcomingSessions()
-    {
-        return PracticeSessions
-            .Where(session => session.IsUpcoming())
-            .OrderBy(session => session.StartTime)
-            .ToList();
     }
 
     private static string ValidateName(string name)

@@ -16,8 +16,6 @@ public class PracticeSession
 
     public int? MaxParticipants { get; set; }
 
-    public List<Attendance> Attendances { get; set; }
-
     public PracticeSession(
         int id,
         int groupId,
@@ -37,7 +35,6 @@ public class PracticeSession
         Title = ValidateText(title, nameof(title));
         Location = ValidateText(location, nameof(location));
         MaxParticipants = ValidateMaxParticipants(maxParticipants);
-        Attendances = new List<Attendance>();
 
         SetTime(startTime, endTime);
     }
@@ -46,7 +43,6 @@ public class PracticeSession
     {
         Title = string.Empty;
         Location = string.Empty;
-        Attendances = new List<Attendance>();
     }
 
     public void UpdateSessionDetails(
@@ -81,26 +77,6 @@ public class PracticeSession
         }
 
         return currentGoingCount < MaxParticipants.Value;
-    }
-
-    public void AddOrUpdateAttendance(Attendance attendance)
-    {
-        if (attendance == null)
-        {
-            throw new ArgumentNullException(nameof(attendance));
-        }
-
-        Attendance? existingAttendance = Attendances
-            .FirstOrDefault(item => item.UserId == attendance.UserId);
-
-        if (existingAttendance == null)
-        {
-            Attendances.Add(attendance);
-        }
-        else
-        {
-            existingAttendance.ChangeStatus(attendance.Status, attendance.Comment);
-        }
     }
 
     private void SetTime(DateTime startTime, DateTime endTime)
