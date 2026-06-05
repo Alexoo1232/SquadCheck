@@ -20,23 +20,36 @@ public class GroupsController : Controller
     {
         List<Group> groups = _groupManager.GetAllGroups();
         List<PracticeSession> sessions = _practiceManager.GetAllSessions();
+        List<GroupListItemViewModel> viewModel = new List<GroupListItemViewModel>();
 
-        List<GroupListItemViewModel> viewModel = groups
-            .Select(group =>
+        foreach (Group group in groups)
+        {
+            int practiceCount = 0;
+            int upcomingPracticeCount = 0;
+
+            foreach (PracticeSession session in sessions)
             {
-                List<PracticeSession> groupSessions = sessions
-                    .Where(session => session.GroupId == group.Id)
-                    .ToList();
-
-                return new GroupListItemViewModel
+                if (session.GroupId == group.Id)
                 {
-                    Group = group,
-                    MemberCount = group.Members.Count,
-                    PracticeCount = groupSessions.Count,
-                    UpcomingPracticeCount = groupSessions.Count(session => session.IsUpcoming())
-                };
-            })
-            .ToList();
+                    practiceCount++;
+
+                    if (session.IsUpcoming())
+                    {
+                        upcomingPracticeCount++;
+                    }
+                }
+            }
+
+            GroupListItemViewModel item = new GroupListItemViewModel
+            {
+                Group = group,
+                MemberCount = group.Members.Count,
+                PracticeCount = practiceCount,
+                UpcomingPracticeCount = upcomingPracticeCount
+            };
+
+            viewModel.Add(item);
+        }
 
         return View(viewModel);
     }
@@ -84,7 +97,7 @@ public class GroupsController : Controller
 
             TempData["SuccessMessage"] = "Group was created successfully.";
 
-            return RedirectToAction(nameof(Details), new { id = group.Id });
+            return RedirectToAction("Details", new { id = group.Id });
         }
         catch (InvalidOperationException exception)
         {
@@ -138,12 +151,22 @@ public class GroupsController : Controller
 
         try
         {
-            User? user = _groupManager
-                .GetAllUsers()
-                .FirstOrDefault(existingUser =>
-                    existingUser.Email.Equals(
-                        viewModel.Email.Trim(),
-                        StringComparison.OrdinalIgnoreCase));
+            string email = viewModel.Email.Trim();
+            User? user = null;
+            List<User> users = _groupManager.GetAllUsers();
+
+            foreach (User existingUser in users)
+            {
+                bool sameEmail = existingUser.Email.Equals(
+                    email,
+                    StringComparison.OrdinalIgnoreCase);
+
+                if (sameEmail)
+                {
+                    user = existingUser;
+                    break;
+                }
+            }
 
             if (user == null)
             {
@@ -160,7 +183,7 @@ public class GroupsController : Controller
 
             TempData["SuccessMessage"] = "Member was added successfully.";
 
-            return RedirectToAction(nameof(Details), new { id = viewModel.GroupId });
+            return RedirectToAction("Details", new { id = viewModel.GroupId });
         }
         catch (InvalidOperationException exception)
         {
@@ -198,7 +221,7 @@ public class GroupsController : Controller
             TempData["ErrorMessage"] = "Member could not be removed.";
         }
 
-        return RedirectToAction(nameof(Details), new { id = groupId });
+        return RedirectToAction("Details", new { id = groupId });
     }
 
     [HttpPost]
@@ -216,6 +239,6 @@ public class GroupsController : Controller
             TempData["ErrorMessage"] = "Group could not be found.";
         }
 
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Index");
     }
 }

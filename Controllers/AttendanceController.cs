@@ -25,9 +25,10 @@ public class AttendanceController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Mark(MarkAttendanceViewModel viewModel)
     {
-        PracticeSession? session = _practiceManager.FindSessionById(viewModel.PracticeSessionId);
+        int practiceSessionId = viewModel.PracticeSessionId;
+        PracticeSession? practiceSession = _practiceManager.FindSessionById(practiceSessionId);
 
-        if (session == null)
+        if (practiceSession == null)
         {
             TempData["ErrorMessage"] = "Practice session could not be found.";
             return RedirectToAction("Index", "Practices");
@@ -36,43 +37,43 @@ public class AttendanceController : Controller
         if (!ModelState.IsValid)
         {
             TempData["ErrorMessage"] = "Please choose a member before marking attendance.";
-            return RedirectToAction("Details", "Practices", new { id = viewModel.PracticeSessionId });
+            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
         }
 
         try
         {
             _attendanceManager.MarkAttendance(
-                viewModel.PracticeSessionId,
+                practiceSessionId,
                 viewModel.UserId,
                 viewModel.Status,
                 viewModel.Comment);
 
             TempData["SuccessMessage"] = "Attendance was updated successfully.";
 
-            return RedirectToAction("Details", "Practices", new { id = viewModel.PracticeSessionId });
+            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
         }
         catch (InvalidOperationException exception)
         {
             TempData["ErrorMessage"] = exception.Message;
-            return RedirectToAction("Details", "Practices", new { id = viewModel.PracticeSessionId });
+            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
         }
         catch (ArgumentException exception)
         {
             TempData["ErrorMessage"] = exception.Message;
-            return RedirectToAction("Details", "Practices", new { id = viewModel.PracticeSessionId });
+            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
         }
     }
 
     public IActionResult Summary(int practiceSessionId)
     {
-        PracticeSession? session = _practiceManager.FindSessionById(practiceSessionId);
+        PracticeSession? practiceSession = _practiceManager.FindSessionById(practiceSessionId);
 
-        if (session == null)
+        if (practiceSession == null)
         {
             return NotFound();
         }
 
-        Group? group = _groupManager.FindGroupById(session.GroupId);
+        Group? group = _groupManager.FindGroupById(practiceSession.GroupId);
 
         if (group == null)
         {
@@ -81,15 +82,15 @@ public class AttendanceController : Controller
 
         PracticeDetailsViewModel viewModel = new PracticeDetailsViewModel
         {
-            PracticeSession = session,
+            PracticeSession = practiceSession,
             Group = group,
             Users = _groupManager.GetAllUsers(),
             Members = _groupManager.GetMembersForGroup(group.Id),
-            Attendances = _attendanceManager.GetAttendanceForSession(session.Id),
-            Summary = _attendanceManager.GetSummary(session.Id),
+            Attendances = _attendanceManager.GetAttendanceForSession(practiceSession.Id),
+            Summary = _attendanceManager.GetSummary(practiceSession.Id),
             MarkAttendance = new MarkAttendanceViewModel
             {
-                PracticeSessionId = session.Id
+                PracticeSessionId = practiceSession.Id
             }
         };
 

@@ -20,8 +20,11 @@ namespace SquadCheck.Controllers
 
         public IActionResult Index()
         {
-            ViewBag.GroupCount = _groupManager.GetAllGroups().Count;
-            ViewBag.UpcomingPracticeCount = _practiceManager.GetUpcomingSessions().Count;
+            List<Group> groups = _groupManager.GetAllGroups();
+            List<PracticeSession> upcomingPracticeSessions = _practiceManager.GetUpcomingSessions();
+
+            ViewBag.GroupCount = groups.Count;
+            ViewBag.UpcomingPracticeCount = upcomingPracticeSessions.Count;
 
             return View();
         }

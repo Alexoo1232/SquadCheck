@@ -31,14 +31,14 @@ public class PracticesController : Controller
 
     public IActionResult Details(int id)
     {
-        PracticeSession? session = _practiceManager.FindSessionById(id);
+        PracticeSession? practiceSession = _practiceManager.FindSessionById(id);
 
-        if (session == null)
+        if (practiceSession == null)
         {
             return NotFound();
         }
 
-        Group? group = _groupManager.FindGroupById(session.GroupId);
+        Group? group = _groupManager.FindGroupById(practiceSession.GroupId);
 
         if (group == null)
         {
@@ -47,15 +47,15 @@ public class PracticesController : Controller
 
         PracticeDetailsViewModel viewModel = new PracticeDetailsViewModel
         {
-            PracticeSession = session,
+            PracticeSession = practiceSession,
             Group = group,
             Users = _groupManager.GetAllUsers(),
             Members = _groupManager.GetMembersForGroup(group.Id),
-            Attendances = _attendanceManager.GetAttendanceForSession(session.Id),
-            Summary = _attendanceManager.GetSummary(session.Id),
+            Attendances = _attendanceManager.GetAttendanceForSession(practiceSession.Id),
+            Summary = _attendanceManager.GetSummary(practiceSession.Id),
             MarkAttendance = new MarkAttendanceViewModel
             {
-                PracticeSessionId = session.Id
+                PracticeSessionId = practiceSession.Id
             }
         };
 
@@ -75,7 +75,7 @@ public class PracticesController : Controller
 
         CreatePracticeSessionViewModel viewModel = new CreatePracticeSessionViewModel();
 
-        if (groupId.HasValue)
+        if (groupId != null)
         {
             Group? group = _groupManager.FindGroupById(groupId.Value);
 
@@ -104,7 +104,7 @@ public class PracticesController : Controller
 
         try
         {
-            PracticeSession session = _practiceManager.CreateSession(
+            PracticeSession practiceSession = _practiceManager.CreateSession(
                 viewModel.GroupId,
                 viewModel.Title,
                 viewModel.StartTime,
@@ -114,7 +114,7 @@ public class PracticesController : Controller
 
             TempData["SuccessMessage"] = "Practice session was created successfully.";
 
-            return RedirectToAction(nameof(Details), new { id = session.Id });
+            return RedirectToAction("Details", new { id = practiceSession.Id });
         }
         catch (InvalidOperationException exception)
         {
@@ -133,25 +133,25 @@ public class PracticesController : Controller
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        PracticeSession? session = _practiceManager.FindSessionById(id);
+        PracticeSession? practiceSession = _practiceManager.FindSessionById(id);
 
-        if (session == null)
+        if (practiceSession == null)
         {
             return NotFound();
         }
 
         EditPracticeSessionViewModel viewModel = new EditPracticeSessionViewModel
         {
-            Id = session.Id,
-            GroupId = session.GroupId,
-            Title = session.Title,
-            StartTime = session.StartTime,
-            EndTime = session.EndTime,
-            Location = session.Location,
-            MaxParticipants = session.MaxParticipants
+            Id = practiceSession.Id,
+            GroupId = practiceSession.GroupId,
+            Title = practiceSession.Title,
+            StartTime = practiceSession.StartTime,
+            EndTime = practiceSession.EndTime,
+            Location = practiceSession.Location,
+            MaxParticipants = practiceSession.MaxParticipants
         };
 
-        PrepareGroupSelectList(session.GroupId);
+        PrepareGroupSelectList(practiceSession.GroupId);
 
         return View(viewModel);
     }
@@ -168,7 +168,7 @@ public class PracticesController : Controller
 
         try
         {
-            PracticeSession session = _practiceManager.UpdateSession(
+            PracticeSession practiceSession = _practiceManager.UpdateSession(
                 viewModel.Id,
                 viewModel.Title,
                 viewModel.StartTime,
@@ -178,7 +178,7 @@ public class PracticesController : Controller
 
             TempData["SuccessMessage"] = "Practice session was updated successfully.";
 
-            return RedirectToAction(nameof(Details), new { id = session.Id });
+            return RedirectToAction("Details", new { id = practiceSession.Id });
         }
         catch (InvalidOperationException exception)
         {
@@ -198,15 +198,15 @@ public class PracticesController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Cancel(int id)
     {
-        PracticeSession? session = _practiceManager.FindSessionById(id);
+        PracticeSession? practiceSession = _practiceManager.FindSessionById(id);
 
-        if (session == null)
+        if (practiceSession == null)
         {
             TempData["ErrorMessage"] = "Practice session could not be found.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index");
         }
 
-        int groupId = session.GroupId;
+        int groupId = practiceSession.GroupId;
 
         bool cancelled = _practiceManager.CancelSession(id);
 
@@ -217,7 +217,7 @@ public class PracticesController : Controller
         }
 
         TempData["ErrorMessage"] = "Practice session could not be cancelled.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Index");
     }
 
     private void PrepareGroupSelectList(int? selectedGroupId = null)
