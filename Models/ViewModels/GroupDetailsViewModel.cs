@@ -14,4 +14,6 @@ public class GroupDetailsViewModel
     public List<GroupMember> Members { get; set; } = new List<GroupMember>();
 
     public List<PracticeSession> PracticeSessions { get; set; } = new List<PracticeSession>();
+
+    public bool CanManageGroup { get; set; }
 }

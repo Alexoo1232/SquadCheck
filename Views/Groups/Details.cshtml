@@ -41,21 +41,24 @@
                     }
                 </div>
 
-                <div class="d-flex flex-column flex-sm-row gap-2 card-actions">
-                    <a asp-controller="Groups"
-                       asp-action="AddMember"
-                       asp-route-groupId="@Model.Group.Id"
-                       class="btn btn-primary mobile-action">
-                        Add member
-                    </a>
+                @if (Model.CanManageGroup)
+                {
+                    <div class="d-flex flex-column flex-sm-row gap-2 card-actions">
+                        <a asp-controller="Groups"
+                           asp-action="AddMember"
+                           asp-route-groupId="@Model.Group.Id"
+                           class="btn btn-primary mobile-action">
+                            Add member
+                        </a>
 
-                    <a asp-controller="Practices"
-                       asp-action="Create"
-                       asp-route-groupId="@Model.Group.Id"
-                       class="btn btn-outline-primary mobile-action">
-                        Create practice
-                    </a>
-                </div>
+                        <a asp-controller="Practices"
+                           asp-action="Create"
+                           asp-route-groupId="@Model.Group.Id"
+                           class="btn btn-outline-primary mobile-action">
+                            Create practice
+                        </a>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -95,19 +98,22 @@
                                             </span>
                                         </div>
 
-                                        <form asp-controller="Groups"
-                                              asp-action="RemoveMember"
-                                              method="post"
-                                              onsubmit="return confirm('Remove this member from the group?');">
-                                            @Html.AntiForgeryToken()
+                                        @if (Model.CanManageGroup)
+                                        {
+                                            <form asp-controller="Groups"
+                                                  asp-action="RemoveMember"
+                                                  method="post"
+                                                  onsubmit="return confirm('Remove this member from the group?');">
+                                                @Html.AntiForgeryToken()
 
-                                            <input type="hidden" name="groupId" value="@Model.Group.Id" />
-                                            <input type="hidden" name="userId" value="@member.UserId" />
+                                                <input type="hidden" name="groupId" value="@Model.Group.Id" />
+                                                <input type="hidden" name="userId" value="@member.UserId" />
 
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                Remove
-                                            </button>
-                                        </form>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    Remove
+                                                </button>
+                                            </form>
+                                        }
                                     </div>
                                 </div>
                             }
@@ -170,17 +176,20 @@
         </div>
     </div>
 
-    <div class="mt-4">
-        <form asp-controller="Groups"
-              asp-action="Delete"
-              asp-route-id="@Model.Group.Id"
-              method="post"
-              onsubmit="return confirm('Delete this group and all related practices?');">
-            @Html.AntiForgeryToken()
+    @if (Model.CanManageGroup)
+    {
+        <div class="mt-4">
+            <form asp-controller="Groups"
+                  asp-action="Delete"
+                  asp-route-id="@Model.Group.Id"
+                  method="post"
+                  onsubmit="return confirm('Delete this group and all related practices?');">
+                @Html.AntiForgeryToken()
 
-            <button type="submit" class="btn btn-outline-danger">
-                Delete group
-            </button>
-        </form>
-    </div>
+                <button type="submit" class="btn btn-outline-danger">
+                    Delete group
+                </button>
+            </form>
+        </div>
+    }
 </div>

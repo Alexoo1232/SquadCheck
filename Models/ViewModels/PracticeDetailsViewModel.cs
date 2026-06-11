@@ -24,4 +24,6 @@ public class PracticeDetailsViewModel
     public User? CurrentUser { get; set; }
 
     public Attendance? CurrentUserAttendance { get; set; }
+
+    public bool CanManagePractice { get; set; }
 }

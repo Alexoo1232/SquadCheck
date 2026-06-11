@@ -14,4 +14,6 @@ public class GroupListItemViewModel
     public int PracticeCount { get; set; }
 
     public int UpcomingPracticeCount { get; set; }
+
+    public bool CanManageGroup { get; set; }
 }

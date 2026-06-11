@@ -12,11 +12,15 @@
         </div>
 
         <div>
-            <a asp-controller="Groups"
-               asp-action="Create"
-               class="btn btn-primary mobile-action">
-                Create group
-            </a>
+            @if (User.IsInRole(SquadCheck.Security.AppRoles.Admin) ||
+                 User.IsInRole(SquadCheck.Security.AppRoles.Coach))
+            {
+                <a asp-controller="Groups"
+                   asp-action="Create"
+                   class="btn btn-primary mobile-action">
+                    Create group
+                </a>
+            }
         </div>
     </div>
 
@@ -43,11 +47,15 @@
                     Create your first group to start planning practices.
                 </p>
 
-                <a asp-controller="Groups"
-                   asp-action="Create"
-                   class="btn btn-primary mobile-action">
-                    Create group
-                </a>
+                @if (User.IsInRole(SquadCheck.Security.AppRoles.Admin) ||
+                     User.IsInRole(SquadCheck.Security.AppRoles.Coach))
+                {
+                    <a asp-controller="Groups"
+                       asp-action="Create"
+                       class="btn btn-primary mobile-action">
+                        Create group
+                    </a>
+                }
             </div>
         </div>
     }
