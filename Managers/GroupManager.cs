@@ -4,14 +4,14 @@ using SquadCheck.Models;
 namespace SquadCheck.Managers;
 
 /// <summary>
-/// Handles users, groups, and group membership.
+/// Works with users, groups, and memberships.
 /// </summary>
 public class GroupManager
 {
     private readonly IDataManager _dataManager;
 
     /// <summary>
-    /// Creates a manager that uses the shared data manager for storage.
+    /// Gets the data manager used for storage.
     /// </summary>
     /// <param name="dataManager">The data manager used to load and save data.</param>
     public GroupManager(IDataManager dataManager)
@@ -20,7 +20,7 @@ public class GroupManager
     }
 
     /// <summary>
-    /// Creates a new user if the email is not already used.
+    /// Creates a user if the email is available.
     /// </summary>
     /// <param name="fullName">The user's full name.</param>
     /// <param name="email">The user's email address.</param>
@@ -67,7 +67,7 @@ public class GroupManager
     }
 
     /// <summary>
-    /// Creates a new group if the name is not already used.
+    /// Creates a group if the name is available.
     /// </summary>
     /// <param name="name">The group name.</param>
     /// <param name="description">The optional group description.</param>
@@ -112,7 +112,7 @@ public class GroupManager
     }
 
     /// <summary>
-    /// Updates the name and description of an existing group.
+    /// Changes a group's name and description.
     /// </summary>
     /// <param name="groupId">The id of the group to update.</param>
     /// <param name="name">The new group name.</param>
@@ -146,7 +146,7 @@ public class GroupManager
     }
 
     /// <summary>
-    /// Deletes a group and removes practice and attendance data connected to it.
+    /// Deletes a group and its related practice data.
     /// </summary>
     /// <param name="groupId">The id of the group to delete.</param>
     /// <returns>True if the group was deleted, otherwise false.</returns>
@@ -176,7 +176,7 @@ public class GroupManager
     }
 
     /// <summary>
-    /// Adds an existing user to a group with the selected role.
+    /// Adds an existing user to a group.
     /// </summary>
     /// <param name="groupId">The id of the group.</param>
     /// <param name="userId">The id of the user.</param>
@@ -223,7 +223,7 @@ public class GroupManager
     }
 
     /// <summary>
-    /// Removes a user from a group and clears related attendance answers.
+    /// Removes a user from a group.
     /// </summary>
     /// <param name="groupId">The id of the group.</param>
     /// <param name="userId">The id of the user to remove.</param>

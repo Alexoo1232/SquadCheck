@@ -4,14 +4,14 @@ using SquadCheck.Models;
 namespace SquadCheck.Managers;
 
 /// <summary>
-/// Handles creation, lookup, updating, and cancellation of practice sessions.
+/// Works with practice sessions.
 /// </summary>
 public class PracticeManager
 {
     private readonly IDataManager _dataManager;
 
     /// <summary>
-    /// Creates a manager that uses the shared data manager for storage.
+    /// Gets the data manager used for storage.
     /// </summary>
     /// <param name="dataManager">The data manager used to load and save data.</param>
     public PracticeManager(IDataManager dataManager)
@@ -20,7 +20,7 @@ public class PracticeManager
     }
 
     /// <summary>
-    /// Creates a new practice session for a group.
+    /// Creates a new practice for a group.
     /// </summary>
     /// <param name="groupId">The id of the group that owns the session.</param>
     /// <param name="title">The practice title.</param>
@@ -104,7 +104,7 @@ public class PracticeManager
     }
 
     /// <summary>
-    /// Gets all practice sessions available to a user through group membership.
+    /// Gets the practices a user can see through their groups.
     /// </summary>
     /// <param name="userId">The id of the user.</param>
     /// <returns>The user's practice sessions sorted by start time.</returns>
@@ -130,7 +130,7 @@ public class PracticeManager
     }
 
     /// <summary>
-    /// Updates the editable details of a practice session.
+    /// Changes the details of a practice.
     /// </summary>
     /// <param name="sessionId">The id of the practice session to update.</param>
     /// <param name="title">The updated title.</param>
@@ -168,7 +168,7 @@ public class PracticeManager
     }
 
     /// <summary>
-    /// Cancels a practice session and removes its attendance answers.
+    /// Cancels a practice and removes its attendance answers.
     /// </summary>
     /// <param name="sessionId">The id of the practice session to cancel.</param>
     /// <returns>True if the session was cancelled, otherwise false.</returns>

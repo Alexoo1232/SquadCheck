@@ -4,7 +4,7 @@ using SquadCheck.Models;
 namespace SquadCheck.Models.ViewModels;
 
 /// <summary>
-/// Contains the form values needed to add a user to a group.
+/// Form data for adding a member to a group.
 /// </summary>
 public class AddMemberViewModel
 {

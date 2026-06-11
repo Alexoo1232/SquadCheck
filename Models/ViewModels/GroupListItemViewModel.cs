@@ -3,7 +3,7 @@ using SquadCheck.Models;
 namespace SquadCheck.Models.ViewModels;
 
 /// <summary>
-/// Contains one group and the count values shown on the group list page.
+/// Data shown for one group on the group list page.
 /// </summary>
 public class GroupListItemViewModel
 {

@@ -6,7 +6,7 @@ using SquadCheck.Models.ViewModels;
 namespace SquadCheck.Controllers;
 
 /// <summary>
-/// Handles attendance form submissions and attendance summary pages.
+/// Controls the attendance pages and attendance form posts.
 /// </summary>
 public class AttendanceController : Controller
 {
@@ -15,7 +15,7 @@ public class AttendanceController : Controller
     private readonly GroupManager _groupManager;
 
     /// <summary>
-    /// Creates a controller with the managers needed for attendance pages.
+    /// Gets the managers this controller needs.
     /// </summary>
     /// <param name="attendanceManager">Manager used to save and read attendance.</param>
     /// <param name="practiceManager">Manager used to find practice sessions.</param>
@@ -33,7 +33,7 @@ public class AttendanceController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     /// <summary>
-    /// Saves or updates a member's attendance answer for a practice session.
+    /// Marks a member as going, maybe, or not going.
     /// </summary>
     /// <param name="viewModel">The posted attendance form values.</param>
     /// <returns>A redirect back to the practice details page.</returns>
@@ -79,7 +79,7 @@ public class AttendanceController : Controller
     }
 
     /// <summary>
-    /// Shows the full attendance summary for one practice session.
+    /// Shows the attendance summary for one practice.
     /// </summary>
     /// <param name="practiceSessionId">The id of the practice session to summarize.</param>
     /// <returns>The attendance summary view, or a not found result.</returns>

@@ -3,7 +3,7 @@ using SquadCheck.Models;
 namespace SquadCheck.Models.ViewModels;
 
 /// <summary>
-/// Contains all data needed by the group details page.
+/// Data shown on the group details page.
 /// </summary>
 public class GroupDetailsViewModel
 {

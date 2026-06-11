@@ -7,7 +7,7 @@ using SquadCheck.Models.ViewModels;
 namespace SquadCheck.Controllers;
 
 /// <summary>
-/// Handles practice session pages, creation, editing, and cancellation.
+/// Controls the pages for practice sessions.
 /// </summary>
 public class PracticesController : Controller
 {
@@ -16,7 +16,7 @@ public class PracticesController : Controller
     private readonly AttendanceManager _attendanceManager;
 
     /// <summary>
-    /// Creates a controller with the managers needed for practices and attendance.
+    /// Gets the managers this controller needs.
     /// </summary>
     /// <param name="practiceManager">Manager used for practice sessions.</param>
     /// <param name="groupManager">Manager used to read groups and members.</param>
@@ -32,7 +32,7 @@ public class PracticesController : Controller
     }
 
     /// <summary>
-    /// Shows all practice sessions.
+    /// Shows the list of practices.
     /// </summary>
     /// <returns>The practice index view.</returns>
     public IActionResult Index()
@@ -43,7 +43,7 @@ public class PracticesController : Controller
     }
 
     /// <summary>
-    /// Shows one practice session with group and attendance information.
+    /// Shows one practice with attendance information.
     /// </summary>
     /// <param name="id">The id of the practice session to show.</param>
     /// <returns>The practice details view, or a not found result.</returns>
@@ -82,7 +82,7 @@ public class PracticesController : Controller
 
     [HttpGet]
     /// <summary>
-    /// Shows the form for creating a practice session.
+    /// Shows the create practice form.
     /// </summary>
     /// <param name="groupId">An optional group id to preselect in the form.</param>
     /// <returns>The create practice view, a redirect, or a not found result.</returns>
@@ -118,7 +118,7 @@ public class PracticesController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     /// <summary>
-    /// Creates a practice session from the submitted form.
+    /// Saves a new practice from the form.
     /// </summary>
     /// <param name="viewModel">The posted practice form values.</param>
     /// <returns>A redirect to practice details, or the form with validation errors.</returns>
@@ -160,7 +160,7 @@ public class PracticesController : Controller
 
     [HttpGet]
     /// <summary>
-    /// Shows the edit form for a practice session.
+    /// Shows the edit practice form.
     /// </summary>
     /// <param name="id">The id of the practice session to edit.</param>
     /// <returns>The edit practice view, or a not found result.</returns>
@@ -192,7 +192,7 @@ public class PracticesController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     /// <summary>
-    /// Updates a practice session from the submitted edit form.
+    /// Saves changes to a practice.
     /// </summary>
     /// <param name="viewModel">The posted edit form values.</param>
     /// <returns>A redirect to practice details, or the form with validation errors.</returns>
@@ -235,7 +235,7 @@ public class PracticesController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     /// <summary>
-    /// Cancels a practice session and removes its related attendance answers.
+    /// Cancels a practice.
     /// </summary>
     /// <param name="id">The id of the practice session to cancel.</param>
     /// <returns>A redirect to the group details page or practice index page.</returns>

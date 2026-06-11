@@ -1,7 +1,7 @@
 namespace SquadCheck.Models;
 
 /// <summary>
-/// Connects a user to a group with a role.
+/// Links a user to a group.
 /// </summary>
 public class GroupMember
 {
@@ -16,7 +16,7 @@ public class GroupMember
     public DateTime JoinedAt { get; set; }
 
     /// <summary>
-    /// Creates a group membership.
+    /// Creates a membership between a user and a group.
     /// </summary>
     /// <param name="id">The membership id.</param>
     /// <param name="groupId">The group id.</param>

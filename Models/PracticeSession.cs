@@ -1,7 +1,7 @@
 namespace SquadCheck.Models;
 
 /// <summary>
-/// Represents one scheduled practice session for a group.
+/// Stores information about one practice session.
 /// </summary>
 public class PracticeSession
 {
@@ -20,7 +20,7 @@ public class PracticeSession
     public int? MaxParticipants { get; set; }
 
     /// <summary>
-    /// Creates a practice session with validated details.
+    /// Creates a practice session.
     /// </summary>
     /// <param name="id">The practice session id.</param>
     /// <param name="groupId">The id of the group that owns the session.</param>
@@ -78,7 +78,7 @@ public class PracticeSession
     }
 
     /// <summary>
-    /// Checks whether one more going answer can be accepted.
+    /// Checks if another member can be marked as going.
     /// </summary>
     /// <param name="currentGoingCount">The current number of going answers.</param>
     /// <returns>True if another going answer can be saved, otherwise false.</returns>
@@ -98,7 +98,7 @@ public class PracticeSession
     }
 
     /// <summary>
-    /// Validates and assigns the start and end times.
+    /// Checks and sets the start and end times.
     /// </summary>
     /// <param name="startTime">The start time.</param>
     /// <param name="endTime">The end time.</param>
@@ -114,7 +114,7 @@ public class PracticeSession
     }
 
     /// <summary>
-    /// Validates and trims required text values.
+    /// Checks and trims required text.
     /// </summary>
     /// <param name="value">The text value to validate.</param>
     /// <param name="propertyName">The name used in the error message.</param>
@@ -130,7 +130,7 @@ public class PracticeSession
     }
 
     /// <summary>
-    /// Validates the optional participant limit.
+    /// Checks the optional participant limit.
     /// </summary>
     /// <param name="maxParticipants">The participant limit to validate.</param>
     /// <returns>The validated participant limit.</returns>

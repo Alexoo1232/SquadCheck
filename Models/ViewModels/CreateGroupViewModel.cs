@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace SquadCheck.Models.ViewModels;
 
 /// <summary>
-/// Contains the form values needed to create a group.
+/// Form data for creating a group.
 /// </summary>
 public class CreateGroupViewModel
 {

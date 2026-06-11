@@ -1,7 +1,7 @@
 namespace SquadCheck.Models;
 
 /// <summary>
-/// Represents a sports group or team.
+/// Stores information about a sports group.
 /// </summary>
 public class Group
 {
@@ -14,7 +14,7 @@ public class Group
     public List<GroupMember> Members { get; set; }
 
     /// <summary>
-    /// Creates a group with a name, description, and empty member list.
+    /// Creates a group with an empty member list.
     /// </summary>
     /// <param name="id">The group id.</param>
     /// <param name="name">The group name.</param>
@@ -76,7 +76,7 @@ public class Group
     }
 
     /// <summary>
-    /// Validates and trims a group name.
+    /// Checks and trims a group name.
     /// </summary>
     /// <param name="name">The group name to validate.</param>
     /// <returns>The trimmed group name.</returns>

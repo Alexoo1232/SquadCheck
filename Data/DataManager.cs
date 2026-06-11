@@ -4,7 +4,7 @@ using SquadCheck.Models;
 namespace SquadCheck.Data;
 
 /// <summary>
-/// Loads and saves the application data as JSON in the App_Data folder.
+/// Saves and loads the app data from a JSON file.
 /// </summary>
 public class DataManager : IDataManager
 {
@@ -13,7 +13,7 @@ public class DataManager : IDataManager
     private readonly JsonSerializerOptions _jsonOptions;
 
     /// <summary>
-    /// Creates a data manager and prepares the path to the JSON data file.
+    /// Sets up the path to the JSON data file.
     /// </summary>
     /// <param name="environment">The web host environment used to find the project folder.</param>
     public DataManager(IWebHostEnvironment environment)
@@ -36,7 +36,7 @@ public class DataManager : IDataManager
     }
 
     /// <summary>
-    /// Loads the saved JSON data from disk.
+    /// Reads the saved JSON data.
     /// </summary>
     /// <returns>The saved application data, or a new empty data object if loading fails.</returns>
     public AppData LoadData()
@@ -79,7 +79,7 @@ public class DataManager : IDataManager
     }
 
     /// <summary>
-    /// Saves the current application data to disk.
+    /// Writes the current data to the JSON file.
     /// </summary>
     /// <param name="data">The application data to save.</param>
     public void SaveData(AppData data)

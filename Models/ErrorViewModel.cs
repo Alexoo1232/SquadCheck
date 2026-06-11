@@ -1,7 +1,7 @@
 namespace SquadCheck.Models
 {
     /// <summary>
-    /// Contains information shown on the error page.
+    /// Holds information for the error page.
     /// </summary>
     public class ErrorViewModel
     {

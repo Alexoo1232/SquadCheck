@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace SquadCheck.Controllers
 {
     /// <summary>
-    /// Handles the home dashboard and standard error page.
+    /// Controls the home page and error page.
     /// </summary>
     public class HomeController : Controller
     {
@@ -14,7 +14,7 @@ namespace SquadCheck.Controllers
         private readonly PracticeManager _practiceManager;
 
         /// <summary>
-        /// Creates a controller with the managers needed for dashboard counts.
+        /// Gets the managers used for the home page counts.
         /// </summary>
         /// <param name="groupManager">Manager used to count groups.</param>
         /// <param name="practiceManager">Manager used to count upcoming practices.</param>
@@ -27,7 +27,7 @@ namespace SquadCheck.Controllers
         }
 
         /// <summary>
-        /// Shows the dashboard with basic group and practice counts.
+        /// Shows the home dashboard.
         /// </summary>
         /// <returns>The home dashboard view.</returns>
         public IActionResult Index()
@@ -48,7 +48,7 @@ namespace SquadCheck.Controllers
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         /// <summary>
-        /// Shows the error page with the current request id.
+        /// Shows the error page.
         /// </summary>
         /// <returns>The error view.</returns>
         public IActionResult Error()

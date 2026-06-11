@@ -4,12 +4,12 @@ using SquadCheck.Managers;
 namespace SquadCheck
 {
     /// <summary>
-    /// Starts the SquadCheck web application and configures its services and request pipeline.
+    /// Sets up and starts the SquadCheck web app.
     /// </summary>
     public class Program
     {
         /// <summary>
-        /// Configures dependency injection, middleware, routes, and then runs the application.
+        /// Registers services, sets up routing, and runs the app.
         /// </summary>
         /// <param name="args">Command-line arguments passed to the application.</param>
         public static void Main(string[] args)

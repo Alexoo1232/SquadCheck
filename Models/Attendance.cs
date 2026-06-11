@@ -1,7 +1,7 @@
 namespace SquadCheck.Models;
 
 /// <summary>
-/// Represents one user's attendance answer for one practice session.
+/// Stores one user's answer for one practice.
 /// </summary>
 public class Attendance
 {
@@ -18,7 +18,7 @@ public class Attendance
     public string? Comment { get; set; }
 
     /// <summary>
-    /// Creates a new attendance answer.
+    /// Creates an attendance answer.
     /// </summary>
     /// <param name="id">The attendance id.</param>
     /// <param name="practiceSessionId">The practice session id.</param>
@@ -69,7 +69,7 @@ public class Attendance
     }
 
     /// <summary>
-    /// Cleans optional comments before they are stored.
+    /// Trims a comment before saving it.
     /// </summary>
     /// <param name="comment">The comment text to clean.</param>
     /// <returns>The cleaned comment, or null when the comment is empty.</returns>

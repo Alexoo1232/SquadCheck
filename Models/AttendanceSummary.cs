@@ -1,7 +1,7 @@
 namespace SquadCheck.Models;
 
 /// <summary>
-/// Contains calculated attendance totals for a practice session.
+/// Holds the attendance totals for one practice.
 /// </summary>
 public class AttendanceSummary
 {

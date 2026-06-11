@@ -1,7 +1,7 @@
 namespace SquadCheck.Models;
 
 /// <summary>
-/// Describes a user's role inside a group.
+/// The roles a user can have in a group.
 /// </summary>
 public enum GroupRole
 {

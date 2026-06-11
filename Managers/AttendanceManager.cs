@@ -4,14 +4,14 @@ using SquadCheck.Models;
 namespace SquadCheck.Managers;
 
 /// <summary>
-/// Handles attendance rules and attendance summaries for practice sessions.
+/// Works with attendance answers and summaries.
 /// </summary>
 public class AttendanceManager
 {
     private readonly IDataManager _dataManager;
 
     /// <summary>
-    /// Creates a manager that uses the shared data manager for storage.
+    /// Gets the data manager used for storage.
     /// </summary>
     /// <param name="dataManager">The data manager used to load and save data.</param>
     public AttendanceManager(IDataManager dataManager)
@@ -20,7 +20,7 @@ public class AttendanceManager
     }
 
     /// <summary>
-    /// Creates or updates one user's attendance answer for a practice session.
+    /// Saves or updates one attendance answer.
     /// </summary>
     /// <param name="practiceSessionId">The id of the practice session.</param>
     /// <param name="userId">The id of the user marking attendance.</param>
@@ -127,7 +127,7 @@ public class AttendanceManager
     }
 
     /// <summary>
-    /// Calculates attendance totals for a practice session.
+    /// Counts the attendance answers for one practice.
     /// </summary>
     /// <param name="practiceSessionId">The id of the practice session.</param>
     /// <returns>A summary with going, not going, maybe, and no response counts.</returns>
@@ -177,7 +177,7 @@ public class AttendanceManager
     }
 
     /// <summary>
-    /// Checks whether a user belongs to the group connected to a practice session.
+    /// Checks if a user is allowed to access a practice.
     /// </summary>
     /// <param name="practiceSessionId">The id of the practice session.</param>
     /// <param name="userId">The id of the user.</param>
@@ -204,7 +204,7 @@ public class AttendanceManager
     }
 
     /// <summary>
-    /// Stops users outside the group from marking attendance.
+    /// Makes sure only group members can mark attendance.
     /// </summary>
     /// <param name="data">The loaded application data.</param>
     /// <param name="practiceSessionId">The id of the practice session.</param>

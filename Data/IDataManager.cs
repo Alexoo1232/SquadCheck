@@ -3,18 +3,18 @@ using SquadCheck.Models;
 namespace SquadCheck.Data;
 
 /// <summary>
-/// Defines the methods used to load and save the application data.
+/// Describes how app data is loaded and saved.
 /// </summary>
 public interface IDataManager
 {
     /// <summary>
-    /// Loads all saved application data.
+    /// Loads the saved app data.
     /// </summary>
     /// <returns>The saved application data, or empty data if no valid file exists.</returns>
     AppData LoadData();
 
     /// <summary>
-    /// Saves all application data.
+    /// Saves the app data.
     /// </summary>
     /// <param name="data">The data object to save.</param>
     void SaveData(AppData data);

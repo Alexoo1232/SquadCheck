@@ -6,7 +6,7 @@ using SquadCheck.Models.ViewModels;
 namespace SquadCheck.Controllers;
 
 /// <summary>
-/// Handles group pages, group creation, and group member management.
+/// Controls the pages for groups and group members.
 /// </summary>
 public class GroupsController : Controller
 {
@@ -14,7 +14,7 @@ public class GroupsController : Controller
     private readonly PracticeManager _practiceManager;
 
     /// <summary>
-    /// Creates a controller with the managers needed for groups and practices.
+    /// Gets the managers this controller needs.
     /// </summary>
     /// <param name="groupManager">Manager used for groups, users, and memberships.</param>
     /// <param name="practiceManager">Manager used to read practice sessions for groups.</param>
@@ -25,7 +25,7 @@ public class GroupsController : Controller
     }
 
     /// <summary>
-    /// Shows all groups with member and practice counts.
+    /// Shows the list of groups.
     /// </summary>
     /// <returns>The group index view.</returns>
     public IActionResult Index()
@@ -67,7 +67,7 @@ public class GroupsController : Controller
     }
 
     /// <summary>
-    /// Shows one group with its members and practice sessions.
+    /// Shows one group with its members and practices.
     /// </summary>
     /// <param name="id">The id of the group to show.</param>
     /// <returns>The group details view, or a not found result.</returns>
@@ -93,7 +93,7 @@ public class GroupsController : Controller
 
     [HttpGet]
     /// <summary>
-    /// Shows the form for creating a new group.
+    /// Shows the create group form.
     /// </summary>
     /// <returns>The create group view.</returns>
     public IActionResult Create()
@@ -104,7 +104,7 @@ public class GroupsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     /// <summary>
-    /// Creates a new group from the submitted form.
+    /// Saves a new group from the form.
     /// </summary>
     /// <param name="viewModel">The posted group form values.</param>
     /// <returns>A redirect to the group details page, or the form with validation errors.</returns>
@@ -139,7 +139,7 @@ public class GroupsController : Controller
 
     [HttpGet]
     /// <summary>
-    /// Shows the form for adding a member to a group.
+    /// Shows the add member form.
     /// </summary>
     /// <param name="groupId">The id of the group that will receive the member.</param>
     /// <returns>The add member view, or a not found result.</returns>
@@ -166,7 +166,7 @@ public class GroupsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     /// <summary>
-    /// Adds a user to a group, creating the user first if needed.
+    /// Adds a member to a group.
     /// </summary>
     /// <param name="viewModel">The posted member form values.</param>
     /// <returns>A redirect to the group details page, or the form with validation errors.</returns>
@@ -238,7 +238,7 @@ public class GroupsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     /// <summary>
-    /// Removes a member from a group.
+    /// Removes a member from the group.
     /// </summary>
     /// <param name="groupId">The id of the group.</param>
     /// <param name="userId">The id of the user to remove.</param>
@@ -269,7 +269,7 @@ public class GroupsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     /// <summary>
-    /// Deletes a group and its related practice data.
+    /// Deletes a group.
     /// </summary>
     /// <param name="id">The id of the group to delete.</param>
     /// <returns>A redirect to the group index page.</returns>

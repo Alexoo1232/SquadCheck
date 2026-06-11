@@ -1,7 +1,7 @@
 namespace SquadCheck.Models;
 
 /// <summary>
-/// Represents a user who can belong to groups and mark attendance.
+/// Stores information about a user.
 /// </summary>
 public class User
 {
@@ -14,7 +14,7 @@ public class User
     public bool IsCoach { get; set; }
 
     /// <summary>
-    /// Creates a user with validated contact details.
+    /// Creates a user.
     /// </summary>
     /// <param name="id">The user id.</param>
     /// <param name="fullName">The user's full name.</param>
@@ -46,7 +46,7 @@ public class User
     }
 
     /// <summary>
-    /// Checks whether the user is a coach in the given group.
+    /// Checks if the user is a coach in a group.
     /// </summary>
     /// <param name="group">The group to check.</param>
     /// <returns>True if the user is a coach in the group, otherwise false.</returns>
@@ -63,7 +63,7 @@ public class User
     }
 
     /// <summary>
-    /// Validates and trims required text values.
+    /// Checks and trims required text.
     /// </summary>
     /// <param name="value">The text value to validate.</param>
     /// <param name="propertyName">The name used in the error message.</param>

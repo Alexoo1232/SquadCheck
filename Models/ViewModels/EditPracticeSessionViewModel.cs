@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace SquadCheck.Models.ViewModels;
 
 /// <summary>
-/// Contains the form values needed to edit a practice session.
+/// Form data for editing a practice.
 /// </summary>
 public class EditPracticeSessionViewModel
 {
