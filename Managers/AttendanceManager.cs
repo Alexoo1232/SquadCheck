@@ -124,6 +124,19 @@ public class AttendanceManager
     }
 
     /// <summary>
+    /// Gets one user's answer for one practice session.
+    /// </summary>
+    /// <param name="userId">The id of the user.</param>
+    /// <param name="practiceSessionId">The id of the practice session.</param>
+    /// <returns>The attendance answer, or null.</returns>
+    public Attendance? GetAttendanceForUserAndSession(int userId, int practiceSessionId)
+    {
+        return _context.Attendances.FirstOrDefault(attendance =>
+            attendance.UserId == userId &&
+            attendance.PracticeSessionId == practiceSessionId);
+    }
+
+    /// <summary>
     /// Counts the attendance answers for one practice.
     /// </summary>
     /// <param name="practiceSessionId">The id of the practice session.</param>

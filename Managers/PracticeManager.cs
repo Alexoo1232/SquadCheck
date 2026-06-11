@@ -123,6 +123,53 @@ public class PracticeManager
     }
 
     /// <summary>
+    /// Gets upcoming practices the user can see through their groups.
+    /// </summary>
+    /// <param name="userId">The id of the user.</param>
+    /// <returns>The user's upcoming practice sessions.</returns>
+    public List<PracticeSession> GetUpcomingSessionsForUser(int userId)
+    {
+        bool userExists = _context.DomainUsers.Any(user => user.Id == userId);
+
+        if (!userExists)
+        {
+            throw new InvalidOperationException("The user could not be found.");
+        }
+
+        List<int> groupIds = _context.GroupMembers
+            .Where(member => member.UserId == userId)
+            .Select(member => member.GroupId)
+            .ToList();
+
+        return _context.PracticeSessions
+            .Where(session =>
+                groupIds.Contains(session.GroupId) &&
+                session.StartTime > DateTime.Now)
+            .OrderBy(session => session.StartTime)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Gets upcoming practices for a given list of groups.
+    /// </summary>
+    /// <param name="groupIds">The ids of the groups.</param>
+    /// <returns>The upcoming practice sessions for those groups.</returns>
+    public List<PracticeSession> GetUpcomingSessionsForGroups(List<int> groupIds)
+    {
+        if (groupIds == null || groupIds.Count == 0)
+        {
+            return new List<PracticeSession>();
+        }
+
+        return _context.PracticeSessions
+            .Where(session =>
+                groupIds.Contains(session.GroupId) &&
+                session.StartTime > DateTime.Now)
+            .OrderBy(session => session.StartTime)
+            .ToList();
+    }
+
+    /// <summary>
     /// Changes the details of a practice.
     /// </summary>
     /// <param name="sessionId">The id of the practice session to update.</param>
