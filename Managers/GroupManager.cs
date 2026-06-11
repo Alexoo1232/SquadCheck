@@ -25,8 +25,13 @@ public class GroupManager
     /// <param name="fullName">The user's full name.</param>
     /// <param name="email">The user's email address.</param>
     /// <param name="isCoach">Whether the user should be marked as a coach.</param>
+    /// <param name="identityUserId">The linked ASP.NET Identity user id.</param>
     /// <returns>The created user.</returns>
-    public User CreateUser(string fullName, string email, bool isCoach = false)
+    public User CreateUser(
+        string fullName,
+        string email,
+        bool isCoach = false,
+        string? identityUserId = null)
     {
         AppData data = _dataManager.LoadData();
         string cleanedEmail = email.Trim();
@@ -42,12 +47,84 @@ public class GroupManager
             data.GetNextUserId(),
             fullName,
             email,
-            isCoach);
+            isCoach,
+            identityUserId);
 
         data.Users.Add(user);
         _dataManager.SaveData(data);
 
         return user;
+    }
+
+    /// <summary>
+    /// Finds a domain user by linked ASP.NET Identity user id.
+    /// </summary>
+    /// <param name="identityUserId">The ASP.NET Identity user id.</param>
+    /// <returns>The matching domain user, or null.</returns>
+    public User? FindUserByIdentityUserId(string identityUserId)
+    {
+        if (string.IsNullOrWhiteSpace(identityUserId))
+        {
+            return null;
+        }
+
+        AppData data = _dataManager.LoadData();
+
+        return data.Users.FirstOrDefault(user =>
+            user.IdentityUserId == identityUserId);
+    }
+
+    /// <summary>
+    /// Creates or links a domain user to an ASP.NET Identity user.
+    /// </summary>
+    /// <param name="fullName">The user's full name.</param>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="identityUserId">The ASP.NET Identity user id.</param>
+    /// <returns>The created or updated domain user.</returns>
+    public User CreateOrConnectIdentityUser(
+        string fullName,
+        string email,
+        string identityUserId)
+    {
+        if (string.IsNullOrWhiteSpace(identityUserId))
+        {
+            throw new ArgumentException("Identity user id cannot be empty.");
+        }
+
+        AppData data = _dataManager.LoadData();
+
+        User? userByIdentity = data.Users.FirstOrDefault(user =>
+            user.IdentityUserId == identityUserId);
+
+        if (userByIdentity != null)
+        {
+            userByIdentity.UpdateContactDetails(fullName, email);
+            _dataManager.SaveData(data);
+            return userByIdentity;
+        }
+
+        User? userByEmail = data.Users.FirstOrDefault(user =>
+            user.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (userByEmail != null)
+        {
+            userByEmail.UpdateContactDetails(fullName, email);
+            userByEmail.ConnectIdentityUser(identityUserId);
+            _dataManager.SaveData(data);
+            return userByEmail;
+        }
+
+        User newUser = new User(
+            data.GetNextUserId(),
+            fullName,
+            email,
+            false,
+            identityUserId);
+
+        data.Users.Add(newUser);
+        _dataManager.SaveData(data);
+
+        return newUser;
     }
 
     public List<User> GetAllUsers()

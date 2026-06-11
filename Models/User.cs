@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SquadCheck.Models;
 
 /// <summary>
@@ -7,11 +9,17 @@ public class User
 {
     public int Id { get; set; }
 
+    [JsonInclude]
     public string FullName { get; set; }
 
+    [JsonInclude]
     public string Email { get; set; }
 
+    [JsonInclude]
     public bool IsCoach { get; set; }
+
+    [JsonInclude]
+    public string? IdentityUserId { get; private set; }
 
     /// <summary>
     /// Creates a user.
@@ -20,12 +28,21 @@ public class User
     /// <param name="fullName">The user's full name.</param>
     /// <param name="email">The user's email address.</param>
     /// <param name="isCoach">Whether the user is a coach.</param>
-    public User(int id, string fullName, string email, bool isCoach = false)
+    /// <param name="identityUserId">The linked ASP.NET Identity user id.</param>
+    public User(
+        int id,
+        string fullName,
+        string email,
+        bool isCoach = false,
+        string? identityUserId = null)
     {
         Id = id;
         FullName = ValidateText(fullName, nameof(fullName));
         Email = ValidateText(email, nameof(email));
         IsCoach = isCoach;
+        IdentityUserId = string.IsNullOrWhiteSpace(identityUserId)
+            ? null
+            : identityUserId.Trim();
     }
 
     public User()
@@ -43,6 +60,20 @@ public class User
     public void SetCoachStatus(bool isCoach)
     {
         IsCoach = isCoach;
+    }
+
+    /// <summary>
+    /// Connects this domain user to an ASP.NET Identity user.
+    /// </summary>
+    /// <param name="identityUserId">The ASP.NET Identity user id.</param>
+    public void ConnectIdentityUser(string identityUserId)
+    {
+        if (string.IsNullOrWhiteSpace(identityUserId))
+        {
+            throw new ArgumentException("Identity user id cannot be empty.");
+        }
+
+        IdentityUserId = identityUserId.Trim();
     }
 
     /// <summary>
