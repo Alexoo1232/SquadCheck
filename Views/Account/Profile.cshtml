@@ -1,0 +1,37 @@
+@model SquadCheck.Models.ViewModels.Account.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="container mt-4">
+    <div class="page-header">
+        <h1 class="page-title">Profile</h1>
+        <p class="page-subtitle">Your SquadCheck account.</p>
+    </div>
+
+    <div class="card app-card">
+        <div class="card-body">
+            <p class="info-label">Name</p>
+            <p class="info-value mb-3">@Model.FullName</p>
+
+            <p class="info-label">Email</p>
+            <p class="info-value mb-3">@Model.Email</p>
+
+            <p class="info-label">Domain user connected</p>
+
+            @if (Model.IsConnectedToDomainUser)
+            {
+                <p class="info-value text-success">
+                    Yes, user ID @Model.DomainUserId
+                </p>
+            }
+            else
+            {
+                <p class="info-value text-danger">
+                    No
+                </p>
+            }
+        </div>
+    </div>
+</div>
