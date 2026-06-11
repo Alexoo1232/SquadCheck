@@ -55,6 +55,8 @@ namespace SquadCheck
 
             WebApplication app = builder.Build();
 
+            IdentitySeeder.SeedAsync(app.Services).GetAwaiter().GetResult();
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
