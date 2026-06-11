@@ -110,11 +110,23 @@ public class GroupsController : Controller
             return Forbid();
         }
 
-        Group? group = _groupManager.FindGroupById(id);
+        Group? group = _groupManager.EnsureJoinCodeForGroup(id);
 
         if (group == null)
         {
             return NotFound();
+        }
+
+        bool canManage = await CanManageGroupAsync(id);
+        string inviteLink = string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(group.JoinCode))
+        {
+            inviteLink = Url.Action(
+                action: nameof(Join),
+                controller: "Groups",
+                values: new { code = group.JoinCode },
+                protocol: Request.Scheme) ?? string.Empty;
         }
 
         GroupDetailsViewModel viewModel = new GroupDetailsViewModel
@@ -123,10 +135,71 @@ public class GroupsController : Controller
             Users = _groupManager.GetAllUsers(),
             Members = _groupManager.GetMembersForGroup(id),
             PracticeSessions = _practiceManager.GetSessionsForGroup(id),
-            CanManageGroup = await CanManageGroupAsync(id)
+            CanManageGroup = canManage,
+            InviteLink = inviteLink
         };
 
         return View(viewModel);
+    }
+
+    /// <summary>
+    /// Shows the join-group form.
+    /// </summary>
+    /// <param name="code">An optional join code to prefill.</param>
+    /// <returns>The join-group view.</returns>
+    [HttpGet]
+    public IActionResult Join(string? code = null)
+    {
+        JoinGroupViewModel viewModel = new JoinGroupViewModel
+        {
+            Code = code ?? string.Empty
+        };
+
+        return View(viewModel);
+    }
+
+    /// <summary>
+    /// Lets the current user join a group with a join code.
+    /// </summary>
+    /// <param name="viewModel">The posted join code.</param>
+    /// <returns>A redirect to the joined group or the form again.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Join(JoinGroupViewModel viewModel)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(viewModel);
+        }
+
+        DomainUser? currentUser = await GetCurrentDomainUserAsync();
+
+        if (currentUser == null)
+        {
+            TempData["ErrorMessage"] = "Your account is not connected to an app user.";
+            return RedirectToAction("Profile", "Account");
+        }
+
+        try
+        {
+            Group group = _groupManager.JoinGroupByCode(
+                currentUser.Id,
+                viewModel.Code);
+
+            TempData["SuccessMessage"] = $"You joined {group.Name}.";
+
+            return RedirectToAction(nameof(Details), new { id = group.Id });
+        }
+        catch (InvalidOperationException exception)
+        {
+            ModelState.AddModelError(string.Empty, exception.Message);
+            return View(viewModel);
+        }
+        catch (ArgumentException exception)
+        {
+            ModelState.AddModelError(string.Empty, exception.Message);
+            return View(viewModel);
+        }
     }
 
     /// <summary>
@@ -318,6 +391,93 @@ public class GroupsController : Controller
             removed ? "Member was removed successfully." : "Member could not be removed.";
 
         return RedirectToAction(nameof(Details), new { id = groupId });
+    }
+
+    /// <summary>
+    /// Generates a new join code for a group.
+    /// </summary>
+    /// <param name="id">The id of the group.</param>
+    /// <returns>A redirect back to the group details page.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegenerateJoinCode(int id)
+    {
+        bool canManage = await CanManageGroupAsync(id);
+
+        if (!canManage)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            _groupManager.RegenerateJoinCode(id);
+            TempData["SuccessMessage"] = "A new join code was generated.";
+        }
+        catch (InvalidOperationException exception)
+        {
+            TempData["ErrorMessage"] = exception.Message;
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    /// <summary>
+    /// Disables a group's join code.
+    /// </summary>
+    /// <param name="id">The id of the group.</param>
+    /// <returns>A redirect back to the group details page.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DisableJoinCode(int id)
+    {
+        bool canManage = await CanManageGroupAsync(id);
+
+        if (!canManage)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            _groupManager.DisableJoinCode(id);
+            TempData["SuccessMessage"] = "Join code was disabled.";
+        }
+        catch (InvalidOperationException exception)
+        {
+            TempData["ErrorMessage"] = exception.Message;
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    /// <summary>
+    /// Enables a group's join code.
+    /// </summary>
+    /// <param name="id">The id of the group.</param>
+    /// <returns>A redirect back to the group details page.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnableJoinCode(int id)
+    {
+        bool canManage = await CanManageGroupAsync(id);
+
+        if (!canManage)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            _groupManager.EnableJoinCode(id);
+            TempData["SuccessMessage"] = "Join code was enabled.";
+        }
+        catch (InvalidOperationException exception)
+        {
+            TempData["ErrorMessage"] = exception.Message;
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     /// <summary>

@@ -16,4 +16,6 @@ public class GroupDetailsViewModel
     public List<PracticeSession> PracticeSessions { get; set; } = new List<PracticeSession>();
 
     public bool CanManageGroup { get; set; }
+
+    public string InviteLink { get; set; } = string.Empty;
 }

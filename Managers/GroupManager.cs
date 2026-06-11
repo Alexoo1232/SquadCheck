@@ -1,6 +1,7 @@
 using SquadCheck.Data;
 using SquadCheck.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace SquadCheck.Managers;
 
@@ -162,10 +163,9 @@ public class GroupManager
     /// <returns>The created group.</returns>
     public Group CreateGroup(string name, string description = "")
     {
-        string cleanedName = name.Trim();
-        string normalizedName = cleanedName.ToLower();
+        string trimmedName = name.Trim();
         bool groupAlreadyExists = _context.Groups.Any(group =>
-            group.Name.ToLower() == normalizedName);
+            group.Name == trimmedName);
 
         if (groupAlreadyExists)
         {
@@ -174,8 +174,10 @@ public class GroupManager
 
         Group group = new Group(
             0,
-            name,
+            trimmedName,
             description);
+
+        group.SetJoinCode(CreateUniqueJoinCode());
 
         _context.Groups.Add(group);
         _context.SaveChanges();
@@ -263,6 +265,136 @@ public class GroupManager
         return _context.Groups
             .Include(group => group.Members)
             .FirstOrDefault(group => group.Id == groupId);
+    }
+
+    /// <summary>
+    /// Makes sure a group has a join code.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    /// <returns>The group, or null when it does not exist.</returns>
+    public Group? EnsureJoinCodeForGroup(int groupId)
+    {
+        Group? group = _context.Groups.FirstOrDefault(group => group.Id == groupId);
+
+        if (group == null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(group.JoinCode))
+        {
+            return group;
+        }
+
+        group.SetJoinCode(CreateUniqueJoinCode());
+        _context.SaveChanges();
+
+        return group;
+    }
+
+    /// <summary>
+    /// Generates a new join code for a group.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    /// <returns>The updated group.</returns>
+    public Group RegenerateJoinCode(int groupId)
+    {
+        Group group = _context.Groups.FirstOrDefault(group => group.Id == groupId)
+            ?? throw new InvalidOperationException("The group could not be found.");
+
+        group.SetJoinCode(CreateUniqueJoinCode());
+        _context.SaveChanges();
+
+        return group;
+    }
+
+    /// <summary>
+    /// Finds a group by an enabled join code.
+    /// </summary>
+    /// <param name="joinCode">The join code to search for.</param>
+    /// <returns>The matching group, or null.</returns>
+    public Group? FindGroupByJoinCode(string joinCode)
+    {
+        string normalizedCode = NormalizeJoinCode(joinCode);
+
+        if (string.IsNullOrWhiteSpace(normalizedCode))
+        {
+            return null;
+        }
+
+        return _context.Groups.FirstOrDefault(group =>
+            group.JoinCode == normalizedCode &&
+            group.IsJoinCodeEnabled);
+    }
+
+    /// <summary>
+    /// Adds a user to a group through a join code.
+    /// </summary>
+    /// <param name="userId">The id of the user joining the group.</param>
+    /// <param name="joinCode">The join code provided by the user.</param>
+    /// <returns>The joined group.</returns>
+    public Group JoinGroupByCode(int userId, string joinCode)
+    {
+        string normalizedCode = NormalizeJoinCode(joinCode);
+
+        if (string.IsNullOrWhiteSpace(normalizedCode))
+        {
+            throw new ArgumentException("Join code cannot be empty.");
+        }
+
+        User user = _context.DomainUsers.FirstOrDefault(user => user.Id == userId)
+            ?? throw new InvalidOperationException("The user could not be found.");
+
+        Group group = _context.Groups.FirstOrDefault(group =>
+            group.JoinCode == normalizedCode &&
+            group.IsJoinCodeEnabled)
+            ?? throw new InvalidOperationException("Invalid or disabled join code.");
+
+        bool alreadyMember = _context.GroupMembers.Any(member =>
+            member.GroupId == group.Id &&
+            member.UserId == user.Id);
+
+        if (alreadyMember)
+        {
+            throw new InvalidOperationException("You are already a member of this group.");
+        }
+
+        GroupMember member = new GroupMember(
+            0,
+            group.Id,
+            user.Id,
+            GroupRole.Member);
+
+        _context.GroupMembers.Add(member);
+        _context.SaveChanges();
+
+        return group;
+    }
+
+    /// <summary>
+    /// Disables a group's join code.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    public void DisableJoinCode(int groupId)
+    {
+        Group group = _context.Groups.FirstOrDefault(group => group.Id == groupId)
+            ?? throw new InvalidOperationException("The group could not be found.");
+
+        group.DisableJoinCode();
+        _context.SaveChanges();
+    }
+
+    /// <summary>
+    /// Enables a group's join code.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    public void EnableJoinCode(int groupId)
+    {
+        Group group = _context.Groups.FirstOrDefault(group => group.Id == groupId)
+            ?? throw new InvalidOperationException("The group could not be found.");
+
+        group.EnableJoinCode();
+        _context.SaveChanges();
     }
 
     /// <summary>
@@ -415,5 +547,60 @@ public class GroupManager
             .OrderBy(member => member.Role)
             .ThenBy(member => member.UserId)
             .ToList();
+    }
+
+    /// <summary>
+    /// Creates a join code that is not already used by another group.
+    /// </summary>
+    /// <returns>A unique join code.</returns>
+    private string CreateUniqueJoinCode()
+    {
+        string joinCode;
+
+        do
+        {
+            joinCode = GenerateJoinCode();
+        }
+        while (_context.Groups.Any(group => group.JoinCode == joinCode));
+
+        return joinCode;
+    }
+
+    /// <summary>
+    /// Generates one random join code.
+    /// </summary>
+    /// <returns>A six-character join code.</returns>
+    private static string GenerateJoinCode()
+    {
+        const string characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        const int codeLength = 6;
+
+        char[] code = new char[codeLength];
+
+        for (int index = 0; index < codeLength; index++)
+        {
+            int randomIndex = RandomNumberGenerator.GetInt32(characters.Length);
+            code[index] = characters[randomIndex];
+        }
+
+        return new string(code);
+    }
+
+    /// <summary>
+    /// Normalizes join-code input before searching.
+    /// </summary>
+    /// <param name="joinCode">The join code entered by the user.</param>
+    /// <returns>The normalized join code.</returns>
+    private static string NormalizeJoinCode(string joinCode)
+    {
+        if (string.IsNullOrWhiteSpace(joinCode))
+        {
+            return string.Empty;
+        }
+
+        return joinCode
+            .Trim()
+            .Replace(" ", string.Empty)
+            .ToUpperInvariant();
     }
 }
