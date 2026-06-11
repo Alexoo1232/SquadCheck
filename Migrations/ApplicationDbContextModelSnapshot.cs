@@ -271,12 +271,25 @@ namespace SquadCheck.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<bool>("IsJoinCodeEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JoinCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("JoinCodeCreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("JoinCode")
+                        .IsUnique();
 
                     b.HasIndex("Name")
                         .IsUnique();

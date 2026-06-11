@@ -7,11 +7,17 @@ public class Group
 {
     public int Id { get; set; }
 
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
-    public string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
-    public List<GroupMember> Members { get; set; }
+    public string? JoinCode { get; set; }
+
+    public DateTime? JoinCodeCreatedAt { get; set; }
+
+    public bool IsJoinCodeEnabled { get; set; } = true;
+
+    public List<GroupMember> Members { get; set; } = new();
 
     /// <summary>
     /// Creates a group with an empty member list.
@@ -24,20 +30,38 @@ public class Group
         Id = id;
         Name = ValidateName(name);
         Description = description.Trim();
-        Members = new List<GroupMember>();
     }
 
     public Group()
     {
-        Name = string.Empty;
-        Description = string.Empty;
-        Members = new List<GroupMember>();
     }
 
     public void UpdateGroupDetails(string name, string description)
     {
         Name = ValidateName(name);
         Description = description.Trim();
+    }
+
+    public void SetJoinCode(string joinCode)
+    {
+        if (string.IsNullOrWhiteSpace(joinCode))
+        {
+            throw new ArgumentException("Join code cannot be empty.");
+        }
+
+        JoinCode = joinCode.Trim().ToUpperInvariant();
+        JoinCodeCreatedAt = DateTime.UtcNow;
+        IsJoinCodeEnabled = true;
+    }
+
+    public void DisableJoinCode()
+    {
+        IsJoinCodeEnabled = false;
+    }
+
+    public void EnableJoinCode()
+    {
+        IsJoinCodeEnabled = true;
     }
 
     public void AddMember(GroupMember member)

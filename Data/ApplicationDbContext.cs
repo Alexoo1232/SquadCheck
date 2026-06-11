@@ -65,7 +65,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(group => group.Description)
                 .HasMaxLength(300);
 
+            entity.Property(group => group.JoinCode)
+                .HasMaxLength(20);
+
+            entity.Property(group => group.IsJoinCodeEnabled)
+                .IsRequired();
+
             entity.HasIndex(group => group.Name)
+                .IsUnique();
+
+            entity.HasIndex(group => group.JoinCode)
                 .IsUnique();
         });
 
