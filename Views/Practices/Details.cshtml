@@ -95,39 +95,62 @@
         <div class="col-12 col-lg-5">
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <h2 class="h5 mb-3">Mark attendance</h2>
+                    <h2 class="h5 mb-3">My attendance</h2>
 
-                    @if (Model.Members.Count == 0)
+                    @if (!User.Identity?.IsAuthenticated ?? true)
+                    {
+                        <p class="text-muted">
+                            Log in to mark your attendance for this practice.
+                        </p>
+
+                        <div class="d-grid gap-2 d-sm-flex">
+                            <a asp-controller="Account"
+                               asp-action="Login"
+                               asp-route-returnUrl="@Context.Request.Path"
+                               class="btn btn-primary mobile-action">
+                                Log in
+                            </a>
+
+                            <a asp-controller="Account"
+                               asp-action="Register"
+                               asp-route-returnUrl="@Context.Request.Path"
+                               class="btn btn-outline-primary mobile-action">
+                                Register
+                            </a>
+                        </div>
+                    }
+                    else if (Model.CurrentUser == null)
+                    {
+                        <p class="text-danger mb-0">
+                            Your account could not be connected to an app user.
+                        </p>
+                    }
+                    else if (!Model.Members.Any(member => member.UserId == Model.CurrentUser.Id))
                     {
                         <p class="text-muted mb-0">
-                            Add members to this group before marking attendance.
+                            You are logged in, but you are not a member of this group.
                         </p>
                     }
                     else
                     {
+                        @if (Model.CurrentUserAttendance != null)
+                        {
+                            <div class="alert alert-info">
+                                Current answer:
+                                <strong>@Model.CurrentUserAttendance.Status</strong>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-secondary">
+                                You have not answered yet.
+                            </div>
+                        }
+
                         <form asp-controller="Attendance" asp-action="Mark" method="post">
                             @Html.AntiForgeryToken()
 
                             <input type="hidden" name="PracticeSessionId" value="@Model.PracticeSession.Id" />
-
-                            <div class="mb-3">
-                                <label for="UserId" class="form-label">Member</label>
-                                <select name="UserId" id="UserId" class="form-select" required>
-                                    <option value="">Choose member</option>
-
-                                    @foreach (GroupMember member in Model.Members)
-                                    {
-                                        User? user = Model.Users.FirstOrDefault(user => user.Id == member.UserId);
-
-                                        if (user != null)
-                                        {
-                                            <option value="@user.Id">
-                                                @user.FullName (@member.Role)
-                                            </option>
-                                        }
-                                    }
-                                </select>
-                            </div>
 
                             <div class="mb-3">
                                 <label for="Comment" class="form-label">Comment</label>
@@ -143,21 +166,21 @@
                                 <button type="submit"
                                         name="Status"
                                         value="@AttendanceStatus.Going"
-                                        class="btn btn-success">
+                                        class="btn btn-success mobile-action">
                                     Going
                                 </button>
 
                                 <button type="submit"
                                         name="Status"
                                         value="@AttendanceStatus.Maybe"
-                                        class="btn btn-warning">
+                                        class="btn btn-warning mobile-action">
                                     Maybe
                                 </button>
 
                                 <button type="submit"
                                         name="Status"
                                         value="@AttendanceStatus.NotGoing"
-                                        class="btn btn-danger">
+                                        class="btn btn-danger mobile-action">
                                     Not going
                                 </button>
                             </div>

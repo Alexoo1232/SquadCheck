@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SquadCheck.Managers;
 using SquadCheck.Models;
@@ -13,6 +15,7 @@ public class AttendanceController : Controller
     private readonly AttendanceManager _attendanceManager;
     private readonly PracticeManager _practiceManager;
     private readonly GroupManager _groupManager;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     /// <summary>
     /// Gets the managers this controller needs.
@@ -20,24 +23,28 @@ public class AttendanceController : Controller
     /// <param name="attendanceManager">Manager used to save and read attendance.</param>
     /// <param name="practiceManager">Manager used to find practice sessions.</param>
     /// <param name="groupManager">Manager used to find groups and members.</param>
+    /// <param name="userManager">Manager used to read the current Identity user.</param>
     public AttendanceController(
         AttendanceManager attendanceManager,
         PracticeManager practiceManager,
-        GroupManager groupManager)
+        GroupManager groupManager,
+        UserManager<ApplicationUser> userManager)
     {
         _attendanceManager = attendanceManager;
         _practiceManager = practiceManager;
         _groupManager = groupManager;
+        _userManager = userManager;
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
     /// <summary>
-    /// Marks a member as going, maybe, or not going.
+    /// Marks attendance for the logged-in user.
     /// </summary>
     /// <param name="viewModel">The posted attendance form values.</param>
     /// <returns>A redirect back to the practice details page.</returns>
-    public IActionResult Mark(MarkAttendanceViewModel viewModel)
+    public IActionResult Mark(MyAttendanceViewModel viewModel)
     {
         int practiceSessionId = viewModel.PracticeSessionId;
         PracticeSession? practiceSession = _practiceManager.FindSessionById(practiceSessionId);
@@ -50,7 +57,23 @@ public class AttendanceController : Controller
 
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Please choose a member before marking attendance.";
+            TempData["ErrorMessage"] = "Attendance could not be updated.";
+            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
+        }
+
+        string? identityUserId = _userManager.GetUserId(User);
+
+        if (string.IsNullOrWhiteSpace(identityUserId))
+        {
+            TempData["ErrorMessage"] = "You need to log in before marking attendance.";
+            return RedirectToAction("Login", "Account");
+        }
+
+        User? domainUser = _groupManager.FindUserByIdentityUserId(identityUserId);
+
+        if (domainUser == null)
+        {
+            TempData["ErrorMessage"] = "Your account is not connected to an app user.";
             return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
         }
 
@@ -58,11 +81,11 @@ public class AttendanceController : Controller
         {
             _attendanceManager.MarkAttendance(
                 practiceSessionId,
-                viewModel.UserId,
+                domainUser.Id,
                 viewModel.Status,
                 viewModel.Comment);
 
-            TempData["SuccessMessage"] = "Attendance was updated successfully.";
+            TempData["SuccessMessage"] = "Your attendance was updated.";
 
             return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
         }

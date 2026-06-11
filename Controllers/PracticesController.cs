@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
 using SquadCheck.Managers;
 using SquadCheck.Models;
 using SquadCheck.Models.ViewModels;
@@ -14,6 +15,7 @@ public class PracticesController : Controller
     private readonly PracticeManager _practiceManager;
     private readonly GroupManager _groupManager;
     private readonly AttendanceManager _attendanceManager;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     /// <summary>
     /// Gets the managers this controller needs.
@@ -21,14 +23,17 @@ public class PracticesController : Controller
     /// <param name="practiceManager">Manager used for practice sessions.</param>
     /// <param name="groupManager">Manager used to read groups and members.</param>
     /// <param name="attendanceManager">Manager used to read attendance data.</param>
+    /// <param name="userManager">Manager used to read the current Identity user.</param>
     public PracticesController(
         PracticeManager practiceManager,
         GroupManager groupManager,
-        AttendanceManager attendanceManager)
+        AttendanceManager attendanceManager,
+        UserManager<ApplicationUser> userManager)
     {
         _practiceManager = practiceManager;
         _groupManager = groupManager;
         _attendanceManager = attendanceManager;
+        _userManager = userManager;
     }
 
     /// <summary>
@@ -49,32 +54,52 @@ public class PracticesController : Controller
     /// <returns>The practice details view, or a not found result.</returns>
     public IActionResult Details(int id)
     {
-        PracticeSession? practiceSession = _practiceManager.FindSessionById(id);
+        PracticeSession? session = _practiceManager.FindSessionById(id);
 
-        if (practiceSession == null)
+        if (session == null)
         {
             return NotFound();
         }
 
-        Group? group = _groupManager.FindGroupById(practiceSession.GroupId);
+        Group? group = _groupManager.FindGroupById(session.GroupId);
 
         if (group == null)
         {
             return NotFound();
         }
 
+        List<Attendance> attendances = _attendanceManager.GetAttendanceForSession(session.Id);
+
+        User? currentDomainUser = null;
+        Attendance? currentUserAttendance = null;
+
+        string? identityUserId = _userManager.GetUserId(User);
+
+        if (!string.IsNullOrWhiteSpace(identityUserId))
+        {
+            currentDomainUser = _groupManager.FindUserByIdentityUserId(identityUserId);
+
+            if (currentDomainUser != null)
+            {
+                currentUserAttendance = attendances.FirstOrDefault(attendance =>
+                    attendance.UserId == currentDomainUser.Id);
+            }
+        }
+
         PracticeDetailsViewModel viewModel = new PracticeDetailsViewModel
         {
-            PracticeSession = practiceSession,
+            PracticeSession = session,
             Group = group,
             Users = _groupManager.GetAllUsers(),
             Members = _groupManager.GetMembersForGroup(group.Id),
-            Attendances = _attendanceManager.GetAttendanceForSession(practiceSession.Id),
-            Summary = _attendanceManager.GetSummary(practiceSession.Id),
+            Attendances = attendances,
+            Summary = _attendanceManager.GetSummary(session.Id),
             MarkAttendance = new MarkAttendanceViewModel
             {
-                PracticeSessionId = practiceSession.Id
-            }
+                PracticeSessionId = session.Id
+            },
+            CurrentUser = currentDomainUser,
+            CurrentUserAttendance = currentUserAttendance
         };
 
         return View(viewModel);

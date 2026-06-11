@@ -20,4 +20,8 @@ public class PracticeDetailsViewModel
     public AttendanceSummary Summary { get; set; } = new AttendanceSummary();
 
     public MarkAttendanceViewModel MarkAttendance { get; set; } = new MarkAttendanceViewModel();
+
+    public User? CurrentUser { get; set; }
+
+    public Attendance? CurrentUserAttendance { get; set; }
 }
