@@ -63,6 +63,76 @@
         </div>
     </div>
 
+    @if (Model.CanManageGroup)
+    {
+        <div class="card app-card mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-2">Invite members</h2>
+
+                <p class="text-muted">
+                    Share this join code or invite link with members so they can join the group themselves.
+                </p>
+
+                @if (Model.Group.IsJoinCodeEnabled)
+                {
+                    <div class="mb-3">
+                        <p class="info-label">Join code</p>
+                        <p class="h3 mb-0">@Model.Group.JoinCode</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <p class="info-label">Invite link</p>
+                        <input class="form-control"
+                               value="@Model.InviteLink"
+                               readonly />
+                    </div>
+
+                    <div class="d-grid gap-2 d-sm-flex">
+                        <form asp-controller="Groups"
+                              asp-action="RegenerateJoinCode"
+                              asp-route-id="@Model.Group.Id"
+                              method="post"
+                              onsubmit="return confirm('Generate a new join code? The old code will stop working.');">
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit" class="btn btn-outline-primary mobile-action">
+                                Generate new code
+                            </button>
+                        </form>
+
+                        <form asp-controller="Groups"
+                              asp-action="DisableJoinCode"
+                              asp-route-id="@Model.Group.Id"
+                              method="post">
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit" class="btn btn-outline-danger mobile-action">
+                                Disable code
+                            </button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        Join code is currently disabled.
+                    </div>
+
+                    <form asp-controller="Groups"
+                          asp-action="EnableJoinCode"
+                          asp-route-id="@Model.Group.Id"
+                          method="post">
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit" class="btn btn-primary mobile-action">
+                            Enable join code
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+
     <div class="row g-4">
         <div class="col-12 col-lg-6">
             <div class="card shadow-sm h-100">

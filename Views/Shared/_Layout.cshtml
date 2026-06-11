@@ -45,6 +45,15 @@
                             </a>
                         </li>
 
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Groups" asp-action="Join">
+                                    Join group
+                                </a>
+                            </li>
+                        }
+
                         @if (User.IsInRole(SquadCheck.Security.AppRoles.Admin))
                         {
                             <li class="nav-item">

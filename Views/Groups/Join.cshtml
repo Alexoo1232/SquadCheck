@@ -1,0 +1,55 @@
+@model SquadCheck.Models.ViewModels.JoinGroupViewModel
+
+@{
+    ViewData["Title"] = "Join group";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-7 col-lg-5">
+            <div class="card app-card">
+                <div class="card-body">
+                    <h1 class="h3 mb-2">Join group</h1>
+
+                    <p class="text-muted">
+                        Enter the join code you received from your coach or group leader.
+                    </p>
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <form asp-controller="Groups" asp-action="Join" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Code" class="form-label"></label>
+                            <input asp-for="Code"
+                                   class="form-control text-uppercase"
+                                   placeholder="Example: BASKET24"
+                                   autocomplete="off" />
+                            <span asp-validation-for="Code" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mobile-action w-100">
+                            Join group
+                        </button>
+                    </form>
+
+                    <div class="mt-3">
+                        <a asp-controller="Groups"
+                           asp-action="Index"
+                           class="text-decoration-none">
+                            ← Back to groups
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
