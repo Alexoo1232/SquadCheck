@@ -1,15 +1,20 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Identity;
 using SquadCheck.Managers;
 using SquadCheck.Models;
 using SquadCheck.Models.ViewModels;
+using SquadCheck.Security;
+
+using DomainUser = SquadCheck.Models.User;
 
 namespace SquadCheck.Controllers;
 
 /// <summary>
 /// Controls the pages for practice sessions.
 /// </summary>
+[Authorize]
 public class PracticesController : Controller
 {
     private readonly PracticeManager _practiceManager;
@@ -37,12 +42,28 @@ public class PracticesController : Controller
     }
 
     /// <summary>
-    /// Shows the list of practices.
+    /// Shows the list of practices the current user can see.
     /// </summary>
     /// <returns>The practice index view.</returns>
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        List<PracticeSession> sessions = _practiceManager.GetAllSessions();
+        List<PracticeSession> sessions;
+
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            sessions = _practiceManager.GetAllSessions();
+        }
+        else
+        {
+            DomainUser? currentUser = await GetCurrentDomainUserAsync();
+
+            if (currentUser == null)
+            {
+                return RedirectToAction("Profile", "Account");
+            }
+
+            sessions = _practiceManager.GetSessionsForUser(currentUser.Id);
+        }
 
         return View(sessions);
     }
@@ -51,9 +72,16 @@ public class PracticesController : Controller
     /// Shows one practice with attendance information.
     /// </summary>
     /// <param name="id">The id of the practice session to show.</param>
-    /// <returns>The practice details view, or a not found result.</returns>
-    public IActionResult Details(int id)
+    /// <returns>The practice details view, or an access result.</returns>
+    public async Task<IActionResult> Details(int id)
     {
+        bool canView = await CanViewSessionAsync(id);
+
+        if (!canView)
+        {
+            return Forbid();
+        }
+
         PracticeSession? session = _practiceManager.FindSessionById(id);
 
         if (session == null)
@@ -69,21 +97,13 @@ public class PracticesController : Controller
         }
 
         List<Attendance> attendances = _attendanceManager.GetAttendanceForSession(session.Id);
-
-        User? currentDomainUser = null;
+        DomainUser? currentDomainUser = await GetCurrentDomainUserAsync();
         Attendance? currentUserAttendance = null;
 
-        string? identityUserId = _userManager.GetUserId(User);
-
-        if (!string.IsNullOrWhiteSpace(identityUserId))
+        if (currentDomainUser != null)
         {
-            currentDomainUser = _groupManager.FindUserByIdentityUserId(identityUserId);
-
-            if (currentDomainUser != null)
-            {
-                currentUserAttendance = attendances.FirstOrDefault(attendance =>
-                    attendance.UserId == currentDomainUser.Id);
-            }
+            currentUserAttendance = attendances.FirstOrDefault(attendance =>
+                attendance.UserId == currentDomainUser.Id);
         }
 
         PracticeDetailsViewModel viewModel = new PracticeDetailsViewModel
@@ -94,70 +114,77 @@ public class PracticesController : Controller
             Members = _groupManager.GetMembersForGroup(group.Id),
             Attendances = attendances,
             Summary = _attendanceManager.GetSummary(session.Id),
-            MarkAttendance = new MarkAttendanceViewModel
-            {
-                PracticeSessionId = session.Id
-            },
             CurrentUser = currentDomainUser,
-            CurrentUserAttendance = currentUserAttendance
+            CurrentUserAttendance = currentUserAttendance,
+            CanManagePractice = await CanManageSessionAsync(id)
         };
 
         return View(viewModel);
     }
 
-    [HttpGet]
     /// <summary>
     /// Shows the create practice form.
     /// </summary>
     /// <param name="groupId">An optional group id to preselect in the form.</param>
-    /// <returns>The create practice view, a redirect, or a not found result.</returns>
-    public IActionResult Create(int? groupId)
+    /// <returns>The create practice view or a redirect.</returns>
+    [Authorize(Roles = AppRoles.AdminOrCoach)]
+    [HttpGet]
+    public async Task<IActionResult> Create(int? groupId)
     {
-        List<Group> groups = _groupManager.GetAllGroups();
+        List<Group> manageableGroups = await GetManageableGroupsAsync();
 
-        if (groups.Count == 0)
+        if (manageableGroups.Count == 0)
         {
-            TempData["ErrorMessage"] = "You need to create a group before creating a practice.";
+            TempData["ErrorMessage"] = "You need to be a coach of a group before creating a practice.";
             return RedirectToAction("Index", "Groups");
         }
 
-        CreatePracticeSessionViewModel viewModel = new CreatePracticeSessionViewModel();
+        CreatePracticeSessionViewModel viewModel = new();
 
-        if (groupId != null)
+        if (groupId.HasValue)
         {
-            Group? group = _groupManager.FindGroupById(groupId.Value);
+            bool canManageGroup = manageableGroups.Any(group => group.Id == groupId.Value);
 
-            if (group == null)
+            if (!canManageGroup)
             {
-                return NotFound();
+                return Forbid();
             }
 
-            viewModel.GroupId = group.Id;
+            viewModel.GroupId = groupId.Value;
         }
 
-        PrepareGroupSelectList(viewModel.GroupId);
+        PrepareGroupSelectList(manageableGroups, viewModel.GroupId);
 
         return View(viewModel);
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     /// <summary>
     /// Saves a new practice from the form.
     /// </summary>
     /// <param name="viewModel">The posted practice form values.</param>
     /// <returns>A redirect to practice details, or the form with validation errors.</returns>
-    public IActionResult Create(CreatePracticeSessionViewModel viewModel)
+    [Authorize(Roles = AppRoles.AdminOrCoach)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(CreatePracticeSessionViewModel viewModel)
     {
+        List<Group> manageableGroups = await GetManageableGroupsAsync();
+        bool canCreateForGroup = manageableGroups.Any(group => group.Id == viewModel.GroupId);
+
+        if (!canCreateForGroup)
+        {
+            return Forbid();
+        }
+
         if (!ModelState.IsValid)
         {
-            PrepareGroupSelectList(viewModel.GroupId);
+            PrepareGroupSelectList(manageableGroups, viewModel.GroupId);
             return View(viewModel);
         }
 
         try
         {
-            PracticeSession practiceSession = _practiceManager.CreateSession(
+            PracticeSession session = _practiceManager.CreateSession(
                 viewModel.GroupId,
                 viewModel.Title,
                 viewModel.StartTime,
@@ -167,71 +194,85 @@ public class PracticesController : Controller
 
             TempData["SuccessMessage"] = "Practice session was created successfully.";
 
-            return RedirectToAction("Details", new { id = practiceSession.Id });
+            return RedirectToAction(nameof(Details), new { id = session.Id });
         }
         catch (InvalidOperationException exception)
         {
             ModelState.AddModelError(string.Empty, exception.Message);
-            PrepareGroupSelectList(viewModel.GroupId);
+            PrepareGroupSelectList(manageableGroups, viewModel.GroupId);
             return View(viewModel);
         }
         catch (ArgumentException exception)
         {
             ModelState.AddModelError(string.Empty, exception.Message);
-            PrepareGroupSelectList(viewModel.GroupId);
+            PrepareGroupSelectList(manageableGroups, viewModel.GroupId);
             return View(viewModel);
         }
     }
 
-    [HttpGet]
     /// <summary>
     /// Shows the edit practice form.
     /// </summary>
     /// <param name="id">The id of the practice session to edit.</param>
-    /// <returns>The edit practice view, or a not found result.</returns>
-    public IActionResult Edit(int id)
+    /// <returns>The edit practice view, or an access result.</returns>
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
     {
-        PracticeSession? practiceSession = _practiceManager.FindSessionById(id);
+        bool canManage = await CanManageSessionAsync(id);
 
-        if (practiceSession == null)
+        if (!canManage)
+        {
+            return Forbid();
+        }
+
+        PracticeSession? session = _practiceManager.FindSessionById(id);
+
+        if (session == null)
         {
             return NotFound();
         }
 
-        EditPracticeSessionViewModel viewModel = new EditPracticeSessionViewModel
+        EditPracticeSessionViewModel viewModel = new()
         {
-            Id = practiceSession.Id,
-            GroupId = practiceSession.GroupId,
-            Title = practiceSession.Title,
-            StartTime = practiceSession.StartTime,
-            EndTime = practiceSession.EndTime,
-            Location = practiceSession.Location,
-            MaxParticipants = practiceSession.MaxParticipants
+            Id = session.Id,
+            GroupId = session.GroupId,
+            Title = session.Title,
+            StartTime = session.StartTime,
+            EndTime = session.EndTime,
+            Location = session.Location,
+            MaxParticipants = session.MaxParticipants
         };
 
-        PrepareGroupSelectList(practiceSession.GroupId);
+        PrepareGroupSelectList(await GetManageableGroupsAsync(), session.GroupId);
 
         return View(viewModel);
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     /// <summary>
     /// Saves changes to a practice.
     /// </summary>
     /// <param name="viewModel">The posted edit form values.</param>
     /// <returns>A redirect to practice details, or the form with validation errors.</returns>
-    public IActionResult Edit(EditPracticeSessionViewModel viewModel)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(EditPracticeSessionViewModel viewModel)
     {
+        bool canManage = await CanManageSessionAsync(viewModel.Id);
+
+        if (!canManage)
+        {
+            return Forbid();
+        }
+
         if (!ModelState.IsValid)
         {
-            PrepareGroupSelectList(viewModel.GroupId);
+            PrepareGroupSelectList(await GetManageableGroupsAsync(), viewModel.GroupId);
             return View(viewModel);
         }
 
         try
         {
-            PracticeSession practiceSession = _practiceManager.UpdateSession(
+            PracticeSession session = _practiceManager.UpdateSession(
                 viewModel.Id,
                 viewModel.Title,
                 viewModel.StartTime,
@@ -241,61 +282,151 @@ public class PracticesController : Controller
 
             TempData["SuccessMessage"] = "Practice session was updated successfully.";
 
-            return RedirectToAction("Details", new { id = practiceSession.Id });
+            return RedirectToAction(nameof(Details), new { id = session.Id });
         }
         catch (InvalidOperationException exception)
         {
             ModelState.AddModelError(string.Empty, exception.Message);
-            PrepareGroupSelectList(viewModel.GroupId);
+            PrepareGroupSelectList(await GetManageableGroupsAsync(), viewModel.GroupId);
             return View(viewModel);
         }
         catch (ArgumentException exception)
         {
             ModelState.AddModelError(string.Empty, exception.Message);
-            PrepareGroupSelectList(viewModel.GroupId);
+            PrepareGroupSelectList(await GetManageableGroupsAsync(), viewModel.GroupId);
             return View(viewModel);
         }
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     /// <summary>
     /// Cancels a practice.
     /// </summary>
     /// <param name="id">The id of the practice session to cancel.</param>
-    /// <returns>A redirect to the group details page or practice index page.</returns>
-    public IActionResult Cancel(int id)
+    /// <returns>A redirect to the related group or practice index page.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id)
     {
-        PracticeSession? practiceSession = _practiceManager.FindSessionById(id);
+        bool canManage = await CanManageSessionAsync(id);
 
-        if (practiceSession == null)
+        if (!canManage)
+        {
+            return Forbid();
+        }
+
+        PracticeSession? session = _practiceManager.FindSessionById(id);
+
+        if (session == null)
         {
             TempData["ErrorMessage"] = "Practice session could not be found.";
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
-        int groupId = practiceSession.GroupId;
-
+        int groupId = session.GroupId;
         bool cancelled = _practiceManager.CancelSession(id);
 
-        if (cancelled)
+        TempData[cancelled ? "SuccessMessage" : "ErrorMessage"] =
+            cancelled ? "Practice session was cancelled." : "Practice session could not be cancelled.";
+
+        return RedirectToAction("Details", "Groups", new { id = groupId });
+    }
+
+    /// <summary>
+    /// Gets the current logged-in domain user.
+    /// </summary>
+    /// <returns>The matching domain user, or null.</returns>
+    private async Task<DomainUser?> GetCurrentDomainUserAsync()
+    {
+        string? identityUserId = _userManager.GetUserId(User);
+
+        if (string.IsNullOrWhiteSpace(identityUserId))
         {
-            TempData["SuccessMessage"] = "Practice session was cancelled.";
-            return RedirectToAction("Details", "Groups", new { id = groupId });
+            return null;
         }
 
-        TempData["ErrorMessage"] = "Practice session could not be cancelled.";
-        return RedirectToAction("Index");
+        return await Task.FromResult(_groupManager.FindUserByIdentityUserId(identityUserId));
+    }
+
+    /// <summary>
+    /// Checks whether the current user can view a practice.
+    /// </summary>
+    /// <param name="sessionId">The id of the practice session.</param>
+    /// <returns>True when the practice may be viewed.</returns>
+    private async Task<bool> CanViewSessionAsync(int sessionId)
+    {
+        PracticeSession? session = _practiceManager.FindSessionById(sessionId);
+
+        if (session == null)
+        {
+            return false;
+        }
+
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            return true;
+        }
+
+        DomainUser? currentUser = await GetCurrentDomainUserAsync();
+
+        return currentUser != null &&
+               _groupManager.IsUserMemberOfGroup(session.GroupId, currentUser.Id);
+    }
+
+    /// <summary>
+    /// Checks whether the current user can manage a practice.
+    /// </summary>
+    /// <param name="sessionId">The id of the practice session.</param>
+    /// <returns>True when the practice may be managed.</returns>
+    private async Task<bool> CanManageSessionAsync(int sessionId)
+    {
+        PracticeSession? session = _practiceManager.FindSessionById(sessionId);
+
+        if (session == null)
+        {
+            return false;
+        }
+
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            return true;
+        }
+
+        DomainUser? currentUser = await GetCurrentDomainUserAsync();
+
+        return currentUser != null &&
+               _groupManager.IsUserCoachOfGroup(session.GroupId, currentUser.Id);
+    }
+
+    /// <summary>
+    /// Gets the groups the current user may manage practices for.
+    /// </summary>
+    /// <returns>The manageable groups.</returns>
+    private async Task<List<Group>> GetManageableGroupsAsync()
+    {
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            return _groupManager.GetAllGroups();
+        }
+
+        DomainUser? currentUser = await GetCurrentDomainUserAsync();
+
+        if (currentUser == null)
+        {
+            return new List<Group>();
+        }
+
+        return _groupManager.GetGroupsCoachedByUser(currentUser.Id);
     }
 
     /// <summary>
     /// Prepares the group dropdown used by the create and edit forms.
     /// </summary>
+    /// <param name="groups">The groups that may be selected.</param>
     /// <param name="selectedGroupId">The group id that should be selected in the dropdown.</param>
-    private void PrepareGroupSelectList(int? selectedGroupId = null)
+    private void PrepareGroupSelectList(
+        List<Group> groups,
+        int? selectedGroupId = null)
     {
-        List<Group> groups = _groupManager.GetAllGroups();
-
         ViewBag.Groups = new SelectList(groups, "Id", "Name", selectedGroupId);
     }
 }

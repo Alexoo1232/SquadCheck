@@ -140,6 +140,21 @@ public class GroupManager
     }
 
     /// <summary>
+    /// Changes whether a domain user is marked as a coach.
+    /// </summary>
+    /// <param name="userId">The id of the user to update.</param>
+    /// <param name="isCoach">The coach flag to save.</param>
+    public void SetUserCoachStatus(int userId, bool isCoach)
+    {
+        User user = _context.DomainUsers.FirstOrDefault(user => user.Id == userId)
+            ?? throw new InvalidOperationException("The user could not be found.");
+
+        user.SetCoachStatus(isCoach);
+
+        _context.SaveChanges();
+    }
+
+    /// <summary>
     /// Creates a group if the name is available.
     /// </summary>
     /// <param name="name">The group name.</param>
@@ -172,6 +187,73 @@ public class GroupManager
     {
         return _context.Groups
             .Include(group => group.Members)
+            .OrderBy(group => group.Name)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Checks whether a user belongs to a group.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    /// <param name="userId">The id of the user.</param>
+    /// <returns>True when the user is a group member.</returns>
+    public bool IsUserMemberOfGroup(int groupId, int userId)
+    {
+        return _context.GroupMembers.Any(member =>
+            member.GroupId == groupId &&
+            member.UserId == userId);
+    }
+
+    /// <summary>
+    /// Checks whether a user is a coach of a group.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    /// <param name="userId">The id of the user.</param>
+    /// <returns>True when the user is a coach of the group.</returns>
+    public bool IsUserCoachOfGroup(int groupId, int userId)
+    {
+        return _context.GroupMembers.Any(member =>
+            member.GroupId == groupId &&
+            member.UserId == userId &&
+            member.Role == GroupRole.Coach);
+    }
+
+    /// <summary>
+    /// Gets the groups a user belongs to.
+    /// </summary>
+    /// <param name="userId">The id of the user.</param>
+    /// <returns>The user's groups sorted by name.</returns>
+    public List<Group> GetGroupsForUser(int userId)
+    {
+        List<int> groupIds = _context.GroupMembers
+            .Where(member => member.UserId == userId)
+            .Select(member => member.GroupId)
+            .ToList();
+
+        return _context.Groups
+            .Include(group => group.Members)
+            .Where(group => groupIds.Contains(group.Id))
+            .OrderBy(group => group.Name)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Gets the groups a user coaches.
+    /// </summary>
+    /// <param name="userId">The id of the user.</param>
+    /// <returns>The coached groups sorted by name.</returns>
+    public List<Group> GetGroupsCoachedByUser(int userId)
+    {
+        List<int> groupIds = _context.GroupMembers
+            .Where(member =>
+                member.UserId == userId &&
+                member.Role == GroupRole.Coach)
+            .Select(member => member.GroupId)
+            .ToList();
+
+        return _context.Groups
+            .Include(group => group.Members)
+            .Where(group => groupIds.Contains(group.Id))
             .OrderBy(group => group.Name)
             .ToList();
     }

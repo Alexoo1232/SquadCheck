@@ -1,38 +1,67 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SquadCheck.Managers;
 using SquadCheck.Models;
 using SquadCheck.Models.ViewModels;
+using SquadCheck.Security;
+
+using DomainUser = SquadCheck.Models.User;
 
 namespace SquadCheck.Controllers;
 
 /// <summary>
 /// Controls the pages for groups and group members.
 /// </summary>
+[Authorize]
 public class GroupsController : Controller
 {
     private readonly GroupManager _groupManager;
     private readonly PracticeManager _practiceManager;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     /// <summary>
     /// Gets the managers this controller needs.
     /// </summary>
     /// <param name="groupManager">Manager used for groups, users, and memberships.</param>
     /// <param name="practiceManager">Manager used to read practice sessions for groups.</param>
-    public GroupsController(GroupManager groupManager, PracticeManager practiceManager)
+    /// <param name="userManager">Manager used to read the current Identity user.</param>
+    public GroupsController(
+        GroupManager groupManager,
+        PracticeManager practiceManager,
+        UserManager<ApplicationUser> userManager)
     {
         _groupManager = groupManager;
         _practiceManager = practiceManager;
+        _userManager = userManager;
     }
 
     /// <summary>
-    /// Shows the list of groups.
+    /// Shows the list of groups the current user can see.
     /// </summary>
     /// <returns>The group index view.</returns>
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        List<Group> groups = _groupManager.GetAllGroups();
+        List<Group> groups;
+
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            groups = _groupManager.GetAllGroups();
+        }
+        else
+        {
+            DomainUser? currentUser = await GetCurrentDomainUserAsync();
+
+            if (currentUser == null)
+            {
+                return RedirectToAction("Profile", "Account");
+            }
+
+            groups = _groupManager.GetGroupsForUser(currentUser.Id);
+        }
+
         List<PracticeSession> sessions = _practiceManager.GetAllSessions();
-        List<GroupListItemViewModel> viewModel = new List<GroupListItemViewModel>();
+        List<GroupListItemViewModel> viewModel = new();
 
         foreach (Group group in groups)
         {
@@ -52,15 +81,16 @@ public class GroupsController : Controller
                 }
             }
 
-            GroupListItemViewModel item = new GroupListItemViewModel
+            bool canManageGroup = await CanManageGroupAsync(group.Id);
+
+            viewModel.Add(new GroupListItemViewModel
             {
                 Group = group,
                 MemberCount = group.Members.Count,
                 PracticeCount = practiceCount,
-                UpcomingPracticeCount = upcomingPracticeCount
-            };
-
-            viewModel.Add(item);
+                UpcomingPracticeCount = upcomingPracticeCount,
+                CanManageGroup = canManageGroup
+            });
         }
 
         return View(viewModel);
@@ -70,9 +100,16 @@ public class GroupsController : Controller
     /// Shows one group with its members and practices.
     /// </summary>
     /// <param name="id">The id of the group to show.</param>
-    /// <returns>The group details view, or a not found result.</returns>
-    public IActionResult Details(int id)
+    /// <returns>The group details view, or an access result.</returns>
+    public async Task<IActionResult> Details(int id)
     {
+        bool canView = await CanViewGroupAsync(id);
+
+        if (!canView)
+        {
+            return Forbid();
+        }
+
         Group? group = _groupManager.FindGroupById(id);
 
         if (group == null)
@@ -85,34 +122,44 @@ public class GroupsController : Controller
             Group = group,
             Users = _groupManager.GetAllUsers(),
             Members = _groupManager.GetMembersForGroup(id),
-            PracticeSessions = _practiceManager.GetSessionsForGroup(id)
+            PracticeSessions = _practiceManager.GetSessionsForGroup(id),
+            CanManageGroup = await CanManageGroupAsync(id)
         };
 
         return View(viewModel);
     }
 
-    [HttpGet]
     /// <summary>
     /// Shows the create group form.
     /// </summary>
     /// <returns>The create group view.</returns>
+    [Authorize(Roles = AppRoles.AdminOrCoach)]
+    [HttpGet]
     public IActionResult Create()
     {
         return View(new CreateGroupViewModel());
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     /// <summary>
     /// Saves a new group from the form.
     /// </summary>
     /// <param name="viewModel">The posted group form values.</param>
     /// <returns>A redirect to the group details page, or the form with validation errors.</returns>
-    public IActionResult Create(CreateGroupViewModel viewModel)
+    [Authorize(Roles = AppRoles.AdminOrCoach)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(CreateGroupViewModel viewModel)
     {
         if (!ModelState.IsValid)
         {
             return View(viewModel);
+        }
+
+        DomainUser? currentUser = await GetCurrentDomainUserAsync();
+
+        if (currentUser == null)
+        {
+            return Forbid();
         }
 
         try
@@ -121,9 +168,14 @@ public class GroupsController : Controller
                 viewModel.Name,
                 viewModel.Description);
 
+            _groupManager.AddMemberToGroup(
+                group.Id,
+                currentUser.Id,
+                GroupRole.Coach);
+
             TempData["SuccessMessage"] = "Group was created successfully.";
 
-            return RedirectToAction("Details", new { id = group.Id });
+            return RedirectToAction(nameof(Details), new { id = group.Id });
         }
         catch (InvalidOperationException exception)
         {
@@ -137,14 +189,21 @@ public class GroupsController : Controller
         }
     }
 
-    [HttpGet]
     /// <summary>
     /// Shows the add member form.
     /// </summary>
     /// <param name="groupId">The id of the group that will receive the member.</param>
-    /// <returns>The add member view, or a not found result.</returns>
-    public IActionResult AddMember(int groupId)
+    /// <returns>The add member view, or an access result.</returns>
+    [HttpGet]
+    public async Task<IActionResult> AddMember(int groupId)
     {
+        bool canManage = await CanManageGroupAsync(groupId);
+
+        if (!canManage)
+        {
+            return Forbid();
+        }
+
         Group? group = _groupManager.FindGroupById(groupId);
 
         if (group == null)
@@ -163,15 +222,22 @@ public class GroupsController : Controller
         return View(viewModel);
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     /// <summary>
     /// Adds a member to a group.
     /// </summary>
     /// <param name="viewModel">The posted member form values.</param>
     /// <returns>A redirect to the group details page, or the form with validation errors.</returns>
-    public IActionResult AddMember(AddMemberViewModel viewModel)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddMember(AddMemberViewModel viewModel)
     {
+        bool canManage = await CanManageGroupAsync(viewModel.GroupId);
+
+        if (!canManage)
+        {
+            return Forbid();
+        }
+
         Group? group = _groupManager.FindGroupById(viewModel.GroupId);
 
         if (group == null)
@@ -188,21 +254,10 @@ public class GroupsController : Controller
         try
         {
             string email = viewModel.Email.Trim();
-            User? user = null;
-            List<User> users = _groupManager.GetAllUsers();
-
-            foreach (User existingUser in users)
-            {
-                bool sameEmail = existingUser.Email.Equals(
-                    email,
-                    StringComparison.OrdinalIgnoreCase);
-
-                if (sameEmail)
-                {
-                    user = existingUser;
-                    break;
-                }
-            }
+            User? user = _groupManager
+                .GetAllUsers()
+                .FirstOrDefault(existingUser =>
+                    string.Equals(existingUser.Email, email, StringComparison.OrdinalIgnoreCase));
 
             if (user == null)
             {
@@ -217,9 +272,14 @@ public class GroupsController : Controller
                 user.Id,
                 viewModel.Role);
 
+            if (viewModel.Role == GroupRole.Coach)
+            {
+                await PromoteIdentityUserToCoachIfConnectedAsync(user);
+            }
+
             TempData["SuccessMessage"] = "Member was added successfully.";
 
-            return RedirectToAction("Details", new { id = viewModel.GroupId });
+            return RedirectToAction(nameof(Details), new { id = viewModel.GroupId });
         }
         catch (InvalidOperationException exception)
         {
@@ -235,57 +295,134 @@ public class GroupsController : Controller
         }
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     /// <summary>
     /// Removes a member from the group.
     /// </summary>
     /// <param name="groupId">The id of the group.</param>
     /// <param name="userId">The id of the user to remove.</param>
     /// <returns>A redirect back to the group details page.</returns>
-    public IActionResult RemoveMember(int groupId, int userId)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveMember(int groupId, int userId)
     {
-        Group? group = _groupManager.FindGroupById(groupId);
+        bool canManage = await CanManageGroupAsync(groupId);
 
-        if (group == null)
+        if (!canManage)
         {
-            return NotFound();
+            return Forbid();
         }
 
         bool removed = _groupManager.RemoveMemberFromGroup(groupId, userId);
 
-        if (removed)
-        {
-            TempData["SuccessMessage"] = "Member was removed successfully.";
-        }
-        else
-        {
-            TempData["ErrorMessage"] = "Member could not be removed.";
-        }
+        TempData[removed ? "SuccessMessage" : "ErrorMessage"] =
+            removed ? "Member was removed successfully." : "Member could not be removed.";
 
-        return RedirectToAction("Details", new { id = groupId });
+        return RedirectToAction(nameof(Details), new { id = groupId });
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     /// <summary>
     /// Deletes a group.
     /// </summary>
     /// <param name="id">The id of the group to delete.</param>
     /// <returns>A redirect to the group index page.</returns>
-    public IActionResult Delete(int id)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
     {
+        bool canManage = await CanManageGroupAsync(id);
+
+        if (!canManage)
+        {
+            return Forbid();
+        }
+
         bool deleted = _groupManager.DeleteGroup(id);
 
-        if (deleted)
+        TempData[deleted ? "SuccessMessage" : "ErrorMessage"] =
+            deleted ? "Group was deleted successfully." : "Group could not be found.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Gets the current logged-in domain user.
+    /// </summary>
+    /// <returns>The matching domain user, or null.</returns>
+    private async Task<DomainUser?> GetCurrentDomainUserAsync()
+    {
+        string? identityUserId = _userManager.GetUserId(User);
+
+        if (string.IsNullOrWhiteSpace(identityUserId))
         {
-            TempData["SuccessMessage"] = "Group was deleted successfully.";
-        }
-        else
-        {
-            TempData["ErrorMessage"] = "Group could not be found.";
+            return null;
         }
 
-        return RedirectToAction("Index");
+        return await Task.FromResult(_groupManager.FindUserByIdentityUserId(identityUserId));
+    }
+
+    /// <summary>
+    /// Checks whether the current user can view a group.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    /// <returns>True when the group may be viewed.</returns>
+    private async Task<bool> CanViewGroupAsync(int groupId)
+    {
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            return true;
+        }
+
+        DomainUser? currentUser = await GetCurrentDomainUserAsync();
+
+        return currentUser != null &&
+               _groupManager.IsUserMemberOfGroup(groupId, currentUser.Id);
+    }
+
+    /// <summary>
+    /// Checks whether the current user can manage a group.
+    /// </summary>
+    /// <param name="groupId">The id of the group.</param>
+    /// <returns>True when the group may be managed.</returns>
+    private async Task<bool> CanManageGroupAsync(int groupId)
+    {
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            return true;
+        }
+
+        DomainUser? currentUser = await GetCurrentDomainUserAsync();
+
+        return currentUser != null &&
+               _groupManager.IsUserCoachOfGroup(groupId, currentUser.Id);
+    }
+
+    /// <summary>
+    /// Promotes a connected identity account to the coach role when needed.
+    /// </summary>
+    /// <param name="domainUser">The domain user that was made a coach.</param>
+    private async Task PromoteIdentityUserToCoachIfConnectedAsync(DomainUser domainUser)
+    {
+        if (string.IsNullOrWhiteSpace(domainUser.IdentityUserId))
+        {
+            return;
+        }
+
+        ApplicationUser? identityUser =
+            await _userManager.FindByIdAsync(domainUser.IdentityUserId);
+
+        if (identityUser == null)
+        {
+            return;
+        }
+
+        bool isAdmin = await _userManager.IsInRoleAsync(identityUser, AppRoles.Admin);
+        bool isCoach = await _userManager.IsInRoleAsync(identityUser, AppRoles.Coach);
+
+        if (!isAdmin && !isCoach)
+        {
+            await _userManager.AddToRoleAsync(identityUser, AppRoles.Coach);
+        }
+
+        _groupManager.SetUserCoachStatus(domainUser.Id, true);
     }
 }

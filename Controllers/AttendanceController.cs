@@ -4,12 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 using SquadCheck.Managers;
 using SquadCheck.Models;
 using SquadCheck.Models.ViewModels;
+using SquadCheck.Security;
+
+using DomainUser = SquadCheck.Models.User;
 
 namespace SquadCheck.Controllers;
 
 /// <summary>
 /// Controls the attendance pages and attendance form posts.
 /// </summary>
+[Authorize]
 public class AttendanceController : Controller
 {
     private readonly AttendanceManager _attendanceManager;
@@ -36,20 +40,18 @@ public class AttendanceController : Controller
         _userManager = userManager;
     }
 
-    [Authorize]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     /// <summary>
     /// Marks attendance for the logged-in user.
     /// </summary>
     /// <param name="viewModel">The posted attendance form values.</param>
     /// <returns>A redirect back to the practice details page.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public IActionResult Mark(MyAttendanceViewModel viewModel)
     {
-        int practiceSessionId = viewModel.PracticeSessionId;
-        PracticeSession? practiceSession = _practiceManager.FindSessionById(practiceSessionId);
+        PracticeSession? session = _practiceManager.FindSessionById(viewModel.PracticeSessionId);
 
-        if (practiceSession == null)
+        if (session == null)
         {
             TempData["ErrorMessage"] = "Practice session could not be found.";
             return RedirectToAction("Index", "Practices");
@@ -58,7 +60,7 @@ public class AttendanceController : Controller
         if (!ModelState.IsValid)
         {
             TempData["ErrorMessage"] = "Attendance could not be updated.";
-            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
+            return RedirectToAction("Details", "Practices", new { id = viewModel.PracticeSessionId });
         }
 
         string? identityUserId = _userManager.GetUserId(User);
@@ -69,35 +71,40 @@ public class AttendanceController : Controller
             return RedirectToAction("Login", "Account");
         }
 
-        User? domainUser = _groupManager.FindUserByIdentityUserId(identityUserId);
+        DomainUser? domainUser = _groupManager.FindUserByIdentityUserId(identityUserId);
 
         if (domainUser == null)
         {
             TempData["ErrorMessage"] = "Your account is not connected to an app user.";
-            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
+            return RedirectToAction("Details", "Practices", new { id = viewModel.PracticeSessionId });
+        }
+
+        if (!_groupManager.IsUserMemberOfGroup(session.GroupId, domainUser.Id))
+        {
+            return Forbid();
         }
 
         try
         {
             _attendanceManager.MarkAttendance(
-                practiceSessionId,
+                viewModel.PracticeSessionId,
                 domainUser.Id,
                 viewModel.Status,
                 viewModel.Comment);
 
             TempData["SuccessMessage"] = "Your attendance was updated.";
 
-            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
+            return RedirectToAction("Details", "Practices", new { id = viewModel.PracticeSessionId });
         }
         catch (InvalidOperationException exception)
         {
             TempData["ErrorMessage"] = exception.Message;
-            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
+            return RedirectToAction("Details", "Practices", new { id = viewModel.PracticeSessionId });
         }
         catch (ArgumentException exception)
         {
             TempData["ErrorMessage"] = exception.Message;
-            return RedirectToAction("Details", "Practices", new { id = practiceSessionId });
+            return RedirectToAction("Details", "Practices", new { id = viewModel.PracticeSessionId });
         }
     }
 
@@ -105,37 +112,67 @@ public class AttendanceController : Controller
     /// Shows the attendance summary for one practice.
     /// </summary>
     /// <param name="practiceSessionId">The id of the practice session to summarize.</param>
-    /// <returns>The attendance summary view, or a not found result.</returns>
-    public IActionResult Summary(int practiceSessionId)
+    /// <returns>The attendance summary view, or an access result.</returns>
+    public async Task<IActionResult> Summary(int practiceSessionId)
     {
-        PracticeSession? practiceSession = _practiceManager.FindSessionById(practiceSessionId);
+        PracticeSession? session = _practiceManager.FindSessionById(practiceSessionId);
 
-        if (practiceSession == null)
+        if (session == null)
         {
             return NotFound();
         }
 
-        Group? group = _groupManager.FindGroupById(practiceSession.GroupId);
+        bool canViewSummary = await CanManageSessionAsync(session);
+
+        if (!canViewSummary)
+        {
+            return Forbid();
+        }
+
+        Group? group = _groupManager.FindGroupById(session.GroupId);
 
         if (group == null)
         {
             return NotFound();
         }
 
-        PracticeDetailsViewModel viewModel = new PracticeDetailsViewModel
+        PracticeDetailsViewModel viewModel = new()
         {
-            PracticeSession = practiceSession,
+            PracticeSession = session,
             Group = group,
             Users = _groupManager.GetAllUsers(),
             Members = _groupManager.GetMembersForGroup(group.Id),
-            Attendances = _attendanceManager.GetAttendanceForSession(practiceSession.Id),
-            Summary = _attendanceManager.GetSummary(practiceSession.Id),
-            MarkAttendance = new MarkAttendanceViewModel
-            {
-                PracticeSessionId = practiceSession.Id
-            }
+            Attendances = _attendanceManager.GetAttendanceForSession(session.Id),
+            Summary = _attendanceManager.GetSummary(session.Id),
+            CanManagePractice = true
         };
 
         return View(viewModel);
+    }
+
+    /// <summary>
+    /// Checks whether the current user may manage a practice session.
+    /// </summary>
+    /// <param name="session">The practice session to check.</param>
+    /// <returns>True when the user may manage the session.</returns>
+    private async Task<bool> CanManageSessionAsync(PracticeSession session)
+    {
+        if (User.IsInRole(AppRoles.Admin))
+        {
+            return true;
+        }
+
+        string? identityUserId = _userManager.GetUserId(User);
+
+        if (string.IsNullOrWhiteSpace(identityUserId))
+        {
+            return false;
+        }
+
+        DomainUser? domainUser = _groupManager.FindUserByIdentityUserId(identityUserId);
+
+        return await Task.FromResult(
+            domainUser != null &&
+            _groupManager.IsUserCoachOfGroup(session.GroupId, domainUser.Id));
     }
 }
