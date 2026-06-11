@@ -1,5 +1,6 @@
 using SquadCheck.Data;
 using SquadCheck.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace SquadCheck.Managers;
 
@@ -8,15 +9,15 @@ namespace SquadCheck.Managers;
 /// </summary>
 public class AttendanceManager
 {
-    private readonly IDataManager _dataManager;
+    private readonly ApplicationDbContext _context;
 
     /// <summary>
-    /// Gets the data manager used for storage.
+    /// Gets the database context used for storage.
     /// </summary>
-    /// <param name="dataManager">The data manager used to load and save data.</param>
-    public AttendanceManager(IDataManager dataManager)
+    /// <param name="context">The EF Core database context.</param>
+    public AttendanceManager(ApplicationDbContext context)
     {
-        _dataManager = dataManager;
+        _context = context;
     }
 
     /// <summary>
@@ -33,8 +34,7 @@ public class AttendanceManager
         AttendanceStatus status,
         string? comment = null)
     {
-        AppData data = _dataManager.LoadData();
-        PracticeSession? session = data.PracticeSessions
+        PracticeSession? session = _context.PracticeSessions
             .FirstOrDefault(session => session.Id == practiceSessionId);
 
         if (session == null)
@@ -42,11 +42,11 @@ public class AttendanceManager
             throw new InvalidOperationException("The practice session could not be found.");
         }
 
-        ValidateMemberAccess(data, practiceSessionId, userId);
+        ValidateMemberAccess(_context, practiceSessionId, userId);
 
         if (status == AttendanceStatus.Going)
         {
-            int goingCountWithoutCurrentUser = data.Attendances.Count(attendance =>
+            int goingCountWithoutCurrentUser = _context.Attendances.Count(attendance =>
                 attendance.PracticeSessionId == practiceSessionId &&
                 attendance.UserId != userId &&
                 attendance.Status == AttendanceStatus.Going);
@@ -57,29 +57,28 @@ public class AttendanceManager
             }
         }
 
-        Attendance? existingAttendance = data.Attendances.FirstOrDefault(attendance =>
+        Attendance? existingAttendance = _context.Attendances.FirstOrDefault(attendance =>
             attendance.PracticeSessionId == practiceSessionId &&
             attendance.UserId == userId);
 
         if (existingAttendance == null)
         {
             Attendance attendance = new Attendance(
-                data.GetNextAttendanceId(),
+                0,
                 practiceSessionId,
                 userId,
                 status,
                 comment);
 
-            data.Attendances.Add(attendance);
-
-            _dataManager.SaveData(data);
+            _context.Attendances.Add(attendance);
+            _context.SaveChanges();
 
             return attendance;
         }
 
         existingAttendance.ChangeStatus(status, comment);
 
-        _dataManager.SaveData(data);
+        _context.SaveChanges();
 
         return existingAttendance;
     }
@@ -91,15 +90,14 @@ public class AttendanceManager
     /// <returns>The attendance records sorted by user id.</returns>
     public List<Attendance> GetAttendanceForSession(int practiceSessionId)
     {
-        AppData data = _dataManager.LoadData();
-        bool sessionExists = data.PracticeSessions.Any(session => session.Id == practiceSessionId);
+        bool sessionExists = _context.PracticeSessions.Any(session => session.Id == practiceSessionId);
 
         if (!sessionExists)
         {
             throw new InvalidOperationException("The practice session could not be found.");
         }
 
-        return data.Attendances
+        return _context.Attendances
             .Where(attendance => attendance.PracticeSessionId == practiceSessionId)
             .OrderBy(attendance => attendance.UserId)
             .ToList();
@@ -112,15 +110,14 @@ public class AttendanceManager
     /// <returns>The user's attendance records sorted by newest update first.</returns>
     public List<Attendance> GetAttendanceForUser(int userId)
     {
-        AppData data = _dataManager.LoadData();
-        bool userExists = data.Users.Any(user => user.Id == userId);
+        bool userExists = _context.DomainUsers.Any(user => user.Id == userId);
 
         if (!userExists)
         {
             throw new InvalidOperationException("The user could not be found.");
         }
 
-        return data.Attendances
+        return _context.Attendances
             .Where(attendance => attendance.UserId == userId)
             .OrderByDescending(attendance => attendance.UpdatedAt)
             .ToList();
@@ -133,8 +130,7 @@ public class AttendanceManager
     /// <returns>A summary with going, not going, maybe, and no response counts.</returns>
     public AttendanceSummary GetSummary(int practiceSessionId)
     {
-        AppData data = _dataManager.LoadData();
-        PracticeSession? session = data.PracticeSessions
+        PracticeSession? session = _context.PracticeSessions
             .FirstOrDefault(session => session.Id == practiceSessionId);
 
         if (session == null)
@@ -142,33 +138,33 @@ public class AttendanceManager
             throw new InvalidOperationException("The practice session could not be found.");
         }
 
-        Group? group = data.Groups
-            .FirstOrDefault(group => group.Id == session.GroupId);
+        bool groupExists = _context.Groups.Any(group => group.Id == session.GroupId);
 
-        if (group == null)
+        if (!groupExists)
         {
             throw new InvalidOperationException("The group could not be found.");
         }
 
-        int goingCount = data.Attendances.Count(attendance =>
+        int goingCount = _context.Attendances.Count(attendance =>
             attendance.PracticeSessionId == practiceSessionId &&
             attendance.Status == AttendanceStatus.Going);
 
-        int notGoingCount = data.Attendances.Count(attendance =>
+        int notGoingCount = _context.Attendances.Count(attendance =>
             attendance.PracticeSessionId == practiceSessionId &&
             attendance.Status == AttendanceStatus.NotGoing);
 
-        int maybeCount = data.Attendances.Count(attendance =>
+        int maybeCount = _context.Attendances.Count(attendance =>
             attendance.PracticeSessionId == practiceSessionId &&
             attendance.Status == AttendanceStatus.Maybe);
 
+        int totalMembers = _context.GroupMembers.Count(member => member.GroupId == session.GroupId);
         int answeredCount = goingCount + notGoingCount + maybeCount;
-        int noResponseCount = Math.Max(0, group.Members.Count - answeredCount);
+        int noResponseCount = Math.Max(0, totalMembers - answeredCount);
 
         return new AttendanceSummary
         {
             PracticeSessionId = practiceSessionId,
-            TotalMembers = group.Members.Count,
+            TotalMembers = totalMembers,
             GoingCount = goingCount,
             NotGoingCount = notGoingCount,
             MaybeCount = maybeCount,
@@ -184,8 +180,7 @@ public class AttendanceManager
     /// <returns>True if the user can access the session, otherwise false.</returns>
     public bool CanUserAccessSession(int practiceSessionId, int userId)
     {
-        AppData data = _dataManager.LoadData();
-        PracticeSession? session = data.PracticeSessions
+        PracticeSession? session = _context.PracticeSessions
             .FirstOrDefault(session => session.Id == practiceSessionId);
 
         if (session == null)
@@ -193,14 +188,9 @@ public class AttendanceManager
             return false;
         }
 
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == session.GroupId);
-
-        if (group == null)
-        {
-            return false;
-        }
-
-        return group.HasMember(userId);
+        return _context.GroupMembers.Any(member =>
+            member.GroupId == session.GroupId &&
+            member.UserId == userId);
     }
 
     /// <summary>
@@ -209,9 +199,9 @@ public class AttendanceManager
     /// <param name="data">The loaded application data.</param>
     /// <param name="practiceSessionId">The id of the practice session.</param>
     /// <param name="userId">The id of the user.</param>
-    private static void ValidateMemberAccess(AppData data, int practiceSessionId, int userId)
+    private static void ValidateMemberAccess(ApplicationDbContext context, int practiceSessionId, int userId)
     {
-        PracticeSession? session = data.PracticeSessions
+        PracticeSession? session = context.PracticeSessions
             .FirstOrDefault(session => session.Id == practiceSessionId);
 
         if (session == null)
@@ -219,14 +209,16 @@ public class AttendanceManager
             throw new InvalidOperationException("The practice session could not be found.");
         }
 
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == session.GroupId);
+        bool groupExists = context.Groups.Any(group => group.Id == session.GroupId);
 
-        if (group == null)
+        if (!groupExists)
         {
             throw new InvalidOperationException("The group could not be found.");
         }
 
-        bool userIsMember = group.HasMember(userId);
+        bool userIsMember = context.GroupMembers.Any(member =>
+            member.GroupId == session.GroupId &&
+            member.UserId == userId);
 
         if (!userIsMember)
         {

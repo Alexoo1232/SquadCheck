@@ -19,20 +19,14 @@ namespace SquadCheck
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-            string appDataPath = Path.Combine(
-                builder.Environment.ContentRootPath,
-                "App_Data");
-
-            if (!Directory.Exists(appDataPath))
-            {
-                Directory.CreateDirectory(appDataPath);
-            }
-
             builder.Services.AddControllersWithViews();
 
+            string connectionString = builder.Configuration
+                .GetConnectionString("SquadCheckConnection")
+                ?? throw new InvalidOperationException("Connection string 'SquadCheckConnection' was not found.");
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(
-                    builder.Configuration.GetConnectionString("IdentityConnection")));
+                options.UseNpgsql(connectionString));
 
             builder.Services
                 .AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -54,8 +48,7 @@ namespace SquadCheck
                 options.LogoutPath = "/Account/Logout";
                 options.AccessDeniedPath = "/Account/AccessDenied";
             });
-
-            builder.Services.AddSingleton<IDataManager, DataManager>();
+            
             builder.Services.AddScoped<GroupManager>();
             builder.Services.AddScoped<PracticeManager>();
             builder.Services.AddScoped<AttendanceManager>();

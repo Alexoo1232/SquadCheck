@@ -15,6 +15,10 @@ public class GroupMember
 
     public DateTime JoinedAt { get; set; }
 
+    public Group? Group { get; set; }
+
+    public User? User { get; set; }
+
     /// <summary>
     /// Creates a membership between a user and a group.
     /// </summary>

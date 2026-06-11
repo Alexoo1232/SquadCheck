@@ -1,5 +1,6 @@
 using SquadCheck.Data;
 using SquadCheck.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace SquadCheck.Managers;
 
@@ -8,15 +9,15 @@ namespace SquadCheck.Managers;
 /// </summary>
 public class PracticeManager
 {
-    private readonly IDataManager _dataManager;
+    private readonly ApplicationDbContext _context;
 
     /// <summary>
-    /// Gets the data manager used for storage.
+    /// Gets the database context used for storage.
     /// </summary>
-    /// <param name="dataManager">The data manager used to load and save data.</param>
-    public PracticeManager(IDataManager dataManager)
+    /// <param name="context">The EF Core database context.</param>
+    public PracticeManager(ApplicationDbContext context)
     {
-        _dataManager = dataManager;
+        _context = context;
     }
 
     /// <summary>
@@ -37,8 +38,7 @@ public class PracticeManager
         string location,
         int? maxParticipants = null)
     {
-        AppData data = _dataManager.LoadData();
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
+        Group? group = _context.Groups.FirstOrDefault(group => group.Id == groupId);
 
         if (group == null)
         {
@@ -46,7 +46,7 @@ public class PracticeManager
         }
 
         PracticeSession session = new PracticeSession(
-            data.GetNextPracticeSessionId(),
+            0,
             group.Id,
             title,
             startTime,
@@ -54,50 +54,44 @@ public class PracticeManager
             location,
             maxParticipants);
 
-        data.PracticeSessions.Add(session);
-
-        _dataManager.SaveData(data);
+        _context.PracticeSessions.Add(session);
+        _context.SaveChanges();
 
         return session;
     }
 
     public PracticeSession? FindSessionById(int sessionId)
     {
-        AppData data = _dataManager.LoadData();
-
-        return data.PracticeSessions.FirstOrDefault(session => session.Id == sessionId);
+        return _context.PracticeSessions.FirstOrDefault(session => session.Id == sessionId);
     }
 
     public List<PracticeSession> GetAllSessions()
     {
-        AppData data = _dataManager.LoadData();
-
-        return data.PracticeSessions
+        return _context.PracticeSessions
             .OrderBy(session => session.StartTime)
             .ToList();
     }
 
     public List<PracticeSession> GetUpcomingSessions()
     {
-        AppData data = _dataManager.LoadData();
+        DateTime now = DateTime.Now;
 
-        return data.PracticeSessions
-            .Where(session => session.IsUpcoming())
+        return _context.PracticeSessions
+            .Where(session => session.StartTime > now)
             .OrderBy(session => session.StartTime)
             .ToList();
     }
 
     public List<PracticeSession> GetSessionsForGroup(int groupId)
     {
-        AppData data = _dataManager.LoadData();
-        bool groupExists = data.Groups.Any(group => group.Id == groupId);
+        bool groupExists = _context.Groups.Any(group => group.Id == groupId);
 
         if (!groupExists)
         {
             throw new InvalidOperationException("The group could not be found.");
         }
 
-        return data.PracticeSessions
+        return _context.PracticeSessions
             .Where(session => session.GroupId == groupId)
             .OrderBy(session => session.StartTime)
             .ToList();
@@ -110,20 +104,19 @@ public class PracticeManager
     /// <returns>The user's practice sessions sorted by start time.</returns>
     public List<PracticeSession> GetSessionsForUser(int userId)
     {
-        AppData data = _dataManager.LoadData();
-        bool userExists = data.Users.Any(user => user.Id == userId);
+        bool userExists = _context.DomainUsers.Any(user => user.Id == userId);
 
         if (!userExists)
         {
             throw new InvalidOperationException("The user could not be found.");
         }
 
-        List<int> groupIds = data.Groups
-            .Where(group => group.HasMember(userId))
-            .Select(group => group.Id)
+        List<int> groupIds = _context.GroupMembers
+            .Where(member => member.UserId == userId)
+            .Select(member => member.GroupId)
             .ToList();
 
-        return data.PracticeSessions
+        return _context.PracticeSessions
             .Where(session => groupIds.Contains(session.GroupId))
             .OrderBy(session => session.StartTime)
             .ToList();
@@ -147,8 +140,7 @@ public class PracticeManager
         string location,
         int? maxParticipants = null)
     {
-        AppData data = _dataManager.LoadData();
-        PracticeSession? session = data.PracticeSessions.FirstOrDefault(session => session.Id == sessionId);
+        PracticeSession? session = _context.PracticeSessions.FirstOrDefault(session => session.Id == sessionId);
 
         if (session == null)
         {
@@ -162,7 +154,7 @@ public class PracticeManager
             location,
             maxParticipants);
 
-        _dataManager.SaveData(data);
+        _context.SaveChanges();
 
         return session;
     }
@@ -174,19 +166,15 @@ public class PracticeManager
     /// <returns>True if the session was cancelled, otherwise false.</returns>
     public bool CancelSession(int sessionId)
     {
-        AppData data = _dataManager.LoadData();
-        PracticeSession? session = data.PracticeSessions.FirstOrDefault(session => session.Id == sessionId);
+        PracticeSession? session = _context.PracticeSessions.FirstOrDefault(session => session.Id == sessionId);
 
         if (session == null)
         {
             return false;
         }
 
-        data.Attendances.RemoveAll(attendance => attendance.PracticeSessionId == sessionId);
-
-        data.PracticeSessions.Remove(session);
-
-        _dataManager.SaveData(data);
+        _context.PracticeSessions.Remove(session);
+        _context.SaveChanges();
 
         return true;
     }

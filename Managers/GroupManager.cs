@@ -1,5 +1,6 @@
 using SquadCheck.Data;
 using SquadCheck.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace SquadCheck.Managers;
 
@@ -8,15 +9,15 @@ namespace SquadCheck.Managers;
 /// </summary>
 public class GroupManager
 {
-    private readonly IDataManager _dataManager;
+    private readonly ApplicationDbContext _context;
 
     /// <summary>
-    /// Gets the data manager used for storage.
+    /// Gets the database context used for storage.
     /// </summary>
-    /// <param name="dataManager">The data manager used to load and save data.</param>
-    public GroupManager(IDataManager dataManager)
+    /// <param name="context">The EF Core database context.</param>
+    public GroupManager(ApplicationDbContext context)
     {
-        _dataManager = dataManager;
+        _context = context;
     }
 
     /// <summary>
@@ -33,10 +34,10 @@ public class GroupManager
         bool isCoach = false,
         string? identityUserId = null)
     {
-        AppData data = _dataManager.LoadData();
         string cleanedEmail = email.Trim();
-        bool emailAlreadyExists = data.Users.Any(user =>
-            user.Email.Equals(cleanedEmail, StringComparison.OrdinalIgnoreCase));
+        string normalizedEmail = cleanedEmail.ToLower();
+        bool emailAlreadyExists = _context.DomainUsers.Any(user =>
+            user.Email.ToLower() == normalizedEmail);
 
         if (emailAlreadyExists)
         {
@@ -44,14 +45,14 @@ public class GroupManager
         }
 
         User user = new User(
-            data.GetNextUserId(),
+            0,
             fullName,
             email,
             isCoach,
             identityUserId);
 
-        data.Users.Add(user);
-        _dataManager.SaveData(data);
+        _context.DomainUsers.Add(user);
+        _context.SaveChanges();
 
         return user;
     }
@@ -68,9 +69,7 @@ public class GroupManager
             return null;
         }
 
-        AppData data = _dataManager.LoadData();
-
-        return data.Users.FirstOrDefault(user =>
+        return _context.DomainUsers.FirstOrDefault(user =>
             user.IdentityUserId == identityUserId);
     }
 
@@ -91,56 +90,53 @@ public class GroupManager
             throw new ArgumentException("Identity user id cannot be empty.");
         }
 
-        AppData data = _dataManager.LoadData();
+        string cleanedEmail = email.Trim();
+        string normalizedEmail = cleanedEmail.ToLower();
 
-        User? userByIdentity = data.Users.FirstOrDefault(user =>
+        User? userByIdentity = _context.DomainUsers.FirstOrDefault(user =>
             user.IdentityUserId == identityUserId);
 
         if (userByIdentity != null)
         {
             userByIdentity.UpdateContactDetails(fullName, email);
-            _dataManager.SaveData(data);
+            _context.SaveChanges();
             return userByIdentity;
         }
 
-        User? userByEmail = data.Users.FirstOrDefault(user =>
-            user.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+        User? userByEmail = _context.DomainUsers.FirstOrDefault(user =>
+            user.Email.ToLower() == normalizedEmail);
 
         if (userByEmail != null)
         {
             userByEmail.UpdateContactDetails(fullName, email);
             userByEmail.ConnectIdentityUser(identityUserId);
-            _dataManager.SaveData(data);
+            _context.SaveChanges();
             return userByEmail;
         }
 
         User newUser = new User(
-            data.GetNextUserId(),
+            0,
             fullName,
             email,
             false,
             identityUserId);
 
-        data.Users.Add(newUser);
-        _dataManager.SaveData(data);
+        _context.DomainUsers.Add(newUser);
+        _context.SaveChanges();
 
         return newUser;
     }
 
     public List<User> GetAllUsers()
     {
-        AppData data = _dataManager.LoadData();
-
-        return data.Users
+        return _context.DomainUsers
             .OrderBy(user => user.FullName)
             .ToList();
     }
 
     public User? FindUserById(int userId)
     {
-        AppData data = _dataManager.LoadData();
-
-        return data.Users.FirstOrDefault(user => user.Id == userId);
+        return _context.DomainUsers.FirstOrDefault(user => user.Id == userId);
     }
 
     /// <summary>
@@ -151,10 +147,10 @@ public class GroupManager
     /// <returns>The created group.</returns>
     public Group CreateGroup(string name, string description = "")
     {
-        AppData data = _dataManager.LoadData();
         string cleanedName = name.Trim();
-        bool groupAlreadyExists = data.Groups.Any(group =>
-            group.Name.Equals(cleanedName, StringComparison.OrdinalIgnoreCase));
+        string normalizedName = cleanedName.ToLower();
+        bool groupAlreadyExists = _context.Groups.Any(group =>
+            group.Name.ToLower() == normalizedName);
 
         if (groupAlreadyExists)
         {
@@ -162,30 +158,29 @@ public class GroupManager
         }
 
         Group group = new Group(
-            data.GetNextGroupId(),
+            0,
             name,
             description);
 
-        data.Groups.Add(group);
-        _dataManager.SaveData(data);
+        _context.Groups.Add(group);
+        _context.SaveChanges();
 
         return group;
     }
 
     public List<Group> GetAllGroups()
     {
-        AppData data = _dataManager.LoadData();
-
-        return data.Groups
+        return _context.Groups
+            .Include(group => group.Members)
             .OrderBy(group => group.Name)
             .ToList();
     }
 
     public Group? FindGroupById(int groupId)
     {
-        AppData data = _dataManager.LoadData();
-
-        return data.Groups.FirstOrDefault(group => group.Id == groupId);
+        return _context.Groups
+            .Include(group => group.Members)
+            .FirstOrDefault(group => group.Id == groupId);
     }
 
     /// <summary>
@@ -197,8 +192,7 @@ public class GroupManager
     /// <returns>The updated group.</returns>
     public Group UpdateGroup(int groupId, string name, string description)
     {
-        AppData data = _dataManager.LoadData();
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
+        Group? group = _context.Groups.FirstOrDefault(group => group.Id == groupId);
 
         if (group == null)
         {
@@ -206,9 +200,10 @@ public class GroupManager
         }
 
         string cleanedName = name.Trim();
-        bool nameUsedByAnotherGroup = data.Groups.Any(existingGroup =>
+        string normalizedName = cleanedName.ToLower();
+        bool nameUsedByAnotherGroup = _context.Groups.Any(existingGroup =>
             existingGroup.Id != groupId &&
-            existingGroup.Name.Equals(cleanedName, StringComparison.OrdinalIgnoreCase));
+            existingGroup.Name.ToLower() == normalizedName);
 
         if (nameUsedByAnotherGroup)
         {
@@ -217,7 +212,7 @@ public class GroupManager
 
         group.UpdateGroupDetails(name, description);
 
-        _dataManager.SaveData(data);
+        _context.SaveChanges();
 
         return group;
     }
@@ -229,25 +224,15 @@ public class GroupManager
     /// <returns>True if the group was deleted, otherwise false.</returns>
     public bool DeleteGroup(int groupId)
     {
-        AppData data = _dataManager.LoadData();
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
+        Group? group = _context.Groups.FirstOrDefault(group => group.Id == groupId);
 
         if (group == null)
         {
             return false;
         }
-
-        List<int> sessionIds = data.PracticeSessions
-            .Where(session => session.GroupId == groupId)
-            .Select(session => session.Id)
-            .ToList();
-
-        data.Attendances.RemoveAll(attendance => sessionIds.Contains(attendance.PracticeSessionId));
-        data.PracticeSessions.RemoveAll(session => session.GroupId == groupId);
-
-        data.Groups.Remove(group);
-
-        _dataManager.SaveData(data);
+        
+        _context.Groups.Remove(group);
+        _context.SaveChanges();
 
         return true;
     }
@@ -261,15 +246,16 @@ public class GroupManager
     /// <returns>The created group membership.</returns>
     public GroupMember AddMemberToGroup(int groupId, int userId, GroupRole role = GroupRole.Member)
     {
-        AppData data = _dataManager.LoadData();
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
+        Group? group = _context.Groups
+            .Include(existingGroup => existingGroup.Members)
+            .FirstOrDefault(existingGroup => existingGroup.Id == groupId);
 
         if (group == null)
         {
             throw new InvalidOperationException("The group could not be found.");
         }
 
-        User? user = data.Users.FirstOrDefault(user => user.Id == userId);
+        User? user = _context.DomainUsers.FirstOrDefault(user => user.Id == userId);
 
         if (user == null)
         {
@@ -282,19 +268,19 @@ public class GroupManager
         }
 
         GroupMember member = new GroupMember(
-            GetNextGroupMemberId(data),
+            0,
             group.Id,
             user.Id,
             role);
 
-        group.AddMember(member);
+        _context.GroupMembers.Add(member);
 
         if (role == GroupRole.Coach)
         {
             user.SetCoachStatus(true);
         }
 
-        _dataManager.SaveData(data);
+        _context.SaveChanges();
 
         return member;
     }
@@ -307,62 +293,45 @@ public class GroupManager
     /// <returns>True if the member was removed, otherwise false.</returns>
     public bool RemoveMemberFromGroup(int groupId, int userId)
     {
-        AppData data = _dataManager.LoadData();
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
+        GroupMember? member = _context.GroupMembers.FirstOrDefault(member =>
+            member.GroupId == groupId &&
+            member.UserId == userId);
 
-        if (group == null)
+        if (member == null)
         {
             return false;
         }
 
-        bool removed = group.RemoveMember(userId);
-
-        if (!removed)
-        {
-            return false;
-        }
-
-        List<int> groupSessionIds = data.PracticeSessions
-            .Where(session => session.GroupId == groupId)
-            .Select(session => session.Id)
+        List<int> groupSessionIds = _context.PracticeSessions
+            .Where(practiceSession => practiceSession.GroupId == groupId)
+            .Select(practiceSession => practiceSession.Id)
             .ToList();
 
-        data.Attendances.RemoveAll(attendance =>
+        List<Attendance> attendances = _context.Attendances.Where(attendance =>
             attendance.UserId == userId &&
-            groupSessionIds.Contains(attendance.PracticeSessionId));
+            groupSessionIds.Contains(attendance.PracticeSessionId))
+            .ToList();
 
-        _dataManager.SaveData(data);
+        _context.Attendances.RemoveRange(attendances);
+        _context.GroupMembers.Remove(member);
+        _context.SaveChanges();
 
         return true;
     }
 
     public List<GroupMember> GetMembersForGroup(int groupId)
     {
-        AppData data = _dataManager.LoadData();
-        Group? group = data.Groups.FirstOrDefault(group => group.Id == groupId);
+        bool groupExists = _context.Groups.Any(group => group.Id == groupId);
 
-        if (group == null)
+        if (!groupExists)
         {
             throw new InvalidOperationException("The group could not be found.");
         }
 
-        return group.Members
+        return _context.GroupMembers
+            .Where(member => member.GroupId == groupId)
             .OrderBy(member => member.Role)
             .ThenBy(member => member.UserId)
             .ToList();
-    }
-
-    private static int GetNextGroupMemberId(AppData data)
-    {
-        List<GroupMember> allMembers = data.Groups
-            .SelectMany(group => group.Members)
-            .ToList();
-
-        if (allMembers.Count == 0)
-        {
-            return 1;
-        }
-
-        return allMembers.Max(member => member.Id) + 1;
     }
 }

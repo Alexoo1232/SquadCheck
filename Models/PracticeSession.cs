@@ -19,6 +19,8 @@ public class PracticeSession
 
     public int? MaxParticipants { get; set; }
 
+    public Group? Group { get; set; }
+
     /// <summary>
     /// Creates a practice session.
     /// </summary>

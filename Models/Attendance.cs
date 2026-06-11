@@ -17,6 +17,10 @@ public class Attendance
 
     public string? Comment { get; set; }
 
+    public PracticeSession? PracticeSession { get; set; }
+
+    public User? User { get; set; }
+
     /// <summary>
     /// Creates an attendance answer.
     /// </summary>
