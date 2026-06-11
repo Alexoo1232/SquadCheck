@@ -3,7 +3,7 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
-<ul class="navbar-nav">
+<ul class="navbar-nav align-items-sm-center">
     @if (SignInManager.IsSignedIn(User))
     {
         ApplicationUser? appUser = await UserManager.GetUserAsync(User);
@@ -18,10 +18,10 @@
             <form asp-controller="Account"
                   asp-action="Logout"
                   method="post"
-                  class="d-inline">
+                  class="d-inline-flex align-items-center mb-0">
                 @Html.AntiForgeryToken()
 
-                <button type="submit" class="btn btn-link nav-link">
+                <button type="submit" class="btn btn-link nav-link p-0">
                     Logout
                 </button>
             </form>
