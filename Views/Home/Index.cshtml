@@ -1,93 +1,340 @@
+@model SquadCheck.Models.ViewModels.DashboardViewModel
+@using SquadCheck.Models
+@using SquadCheck.Models.ViewModels
+
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="container mt-4">
+<div class="container mt-4 dashboard-page">
     <div class="page-header">
-        <h1 class="page-title">Dashboard</h1>
-        <p class="page-subtitle">
-            Plan practices, manage groups, and collect attendance
-        </p>
+        <h1 class="page-title">Hi, @Model.CurrentUser.FullName</h1>
+        <p class="page-subtitle">Here is your practice overview.</p>
     </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (Model.NextPractice == null)
+    {
+        <div class="card app-card mb-4">
+            <div class="card-body empty-state">
+                <h2>No upcoming practice</h2>
+
+                <p class="text-muted">
+                    Join a group or wait for your coach to create the next practice.
+                </p>
+
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a asp-controller="Groups"
+                       asp-action="Join"
+                       class="btn btn-primary mobile-action">
+                        Join group
+                    </a>
+
+                    <a asp-controller="Groups"
+                       asp-action="Index"
+                       class="btn btn-outline-primary mobile-action">
+                        My groups
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        DashboardPracticeCardViewModel next = Model.NextPractice;
+
+        <div class="card app-card next-practice-card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <p class="text-muted mb-1">Next practice</p>
+                        <h2 class="h3 mb-1">@next.PracticeSession.Title</h2>
+                        <p class="mb-0">@next.Group.Name</p>
+                    </div>
+
+                    @if (next.CurrentUserAttendance != null)
+                    {
+                        <span class="badge bg-primary">
+                            @next.CurrentUserAttendance.Status
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">
+                            No answer
+                        </span>
+                    }
+                </div>
+
+                <div class="practice-info-grid mb-4">
+                    <div>
+                        <p class="info-label">Date</p>
+                        <p class="info-value">@next.PracticeSession.StartTime.ToString("dddd, dd MMM")</p>
+                    </div>
+
+                    <div>
+                        <p class="info-label">Time</p>
+                        <p class="info-value">
+                            @next.PracticeSession.StartTime.ToString("HH:mm")
+                            -
+                            @next.PracticeSession.EndTime.ToString("HH:mm")
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="info-label">Location</p>
+                        <p class="info-value">@next.PracticeSession.Location</p>
+                    </div>
+                </div>
+
+                <form asp-controller="Attendance" asp-action="Mark" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="PracticeSessionId" value="@next.PracticeSession.Id" />
+
+                    <div class="mb-3">
+                        <label for="Comment" class="form-label">Comment</label>
+                        <input type="text"
+                               name="Comment"
+                               id="Comment"
+                               class="form-control"
+                               maxlength="200"
+                               placeholder="Optional comment" />
+                    </div>
+
+                    <div class="dashboard-attendance-buttons">
+                        <button type="submit"
+                                name="Status"
+                                value="@AttendanceStatus.Going"
+                                class="btn btn-success mobile-action">
+                            Going
+                        </button>
+
+                        <button type="submit"
+                                name="Status"
+                                value="@AttendanceStatus.Maybe"
+                                class="btn btn-warning mobile-action">
+                            Maybe
+                        </button>
+
+                        <button type="submit"
+                                name="Status"
+                                value="@AttendanceStatus.NotGoing"
+                                class="btn btn-danger mobile-action">
+                            Not going
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-3">
+                    <a asp-controller="Practices"
+                       asp-action="Details"
+                       asp-route-id="@next.PracticeSession.Id"
+                       class="btn btn-outline-secondary mobile-action w-100">
+                        Open practice details
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
 
     <div class="row g-3 mb-4">
-        <div class="col-12 col-md-6">
-            <div class="card app-card action-card h-100">
-                <div class="card-body">
-                    <h2 class="h5 mb-2">Groups</h2>
-                    <p class="text-muted">
-                        Create teams, add members, and manage group information.
-                    </p>
-
-                    <div class="mobile-stack d-sm-flex gap-2">
-                        <a asp-controller="Groups"
-                           asp-action="Index"
-                           class="btn btn-primary mobile-action">
-                            Open groups
-                        </a>
-
-                        <a asp-controller="Groups"
-                           asp-action="Create"
-                           class="btn btn-outline-primary mobile-action">
-                            Create group
-                        </a>
-                    </div>
-                </div>
+        <div class="col-6 col-md-3">
+            <div class="summary-box">
+                <p class="summary-number">@Model.GroupCount</p>
+                <div class="summary-label">Groups</div>
             </div>
         </div>
 
-        <div class="col-12 col-md-6">
-            <div class="card app-card action-card h-100">
-                <div class="card-body">
-                    <h2 class="h5 mb-2">Practices</h2>
-                    <p class="text-muted">
-                        Create practice sessions and check attendance answers.
-                    </p>
-
-                    <div class="mobile-stack d-sm-flex gap-2">
-                        <a asp-controller="Practices"
-                           asp-action="Index"
-                           class="btn btn-primary mobile-action">
-                            Open practices
-                        </a>
-
-                        <a asp-controller="Practices"
-                           asp-action="Create"
-                           class="btn btn-outline-primary mobile-action">
-                            Create practice
-                        </a>
-                    </div>
-                </div>
+        <div class="col-6 col-md-3">
+            <div class="summary-box">
+                <p class="summary-number">@Model.UpcomingPracticeCount</p>
+                <div class="summary-label">Upcoming</div>
             </div>
         </div>
+
+        @if (Model.IsCoach)
+        {
+            <div class="col-6 col-md-3">
+                <div class="summary-box">
+                    <p class="summary-number">@Model.MissingResponseCount</p>
+                    <div class="summary-label">Missing replies</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <a asp-controller="Practices"
+                   asp-action="Create"
+                   class="btn btn-primary mobile-action dashboard-create-button">
+                    Create practice
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="col-12 col-md-6">
+                <a asp-controller="Groups"
+                   asp-action="Join"
+                   class="btn btn-outline-primary mobile-action dashboard-create-button">
+                    Join group
+                </a>
+            </div>
+        }
     </div>
 
-    <div class="card app-card">
-        <div class="card-body">
-            <h2 class="h5 mb-2">Example workflow</h2>
+    @if (Model.IsCoach)
+    {
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Coach overview</h2>
 
-            <div class="row g-3">
-                <div class="col-12 col-md-4">
-                    <div class="summary-box">
-                        <p class="summary-number">1</p>
-                        <div class="summary-label">Create a group</div>
+                <a asp-controller="Practices"
+                   asp-action="Create"
+                   class="btn btn-sm btn-outline-primary">
+                    Create practice
+                </a>
+            </div>
+
+            @if (Model.CoachPractices.Count == 0)
+            {
+                <div class="card app-card">
+                    <div class="card-body">
+                        <p class="text-muted mb-0">
+                            No upcoming practices for groups you coach.
+                        </p>
                     </div>
                 </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (DashboardPracticeCardViewModel item in Model.CoachPractices)
+                    {
+                        <div class="col-12 col-lg-6">
+                            <div class="card app-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                        <div>
+                                            <h3 class="h5 mb-1">@item.PracticeSession.Title</h3>
+                                            <p class="text-muted mb-0">@item.Group.Name</p>
+                                        </div>
 
-                <div class="col-12 col-md-4">
-                    <div class="summary-box">
-                        <p class="summary-number">2</p>
-                        <div class="summary-label">Add members</div>
-                    </div>
+                                        <span class="badge bg-secondary">
+                                            @item.PracticeSession.StartTime.ToString("dd MMM")
+                                        </span>
+                                    </div>
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-3">
+                                            <div class="mini-summary">
+                                                <strong>@(item.Summary?.GoingCount ?? 0)</strong>
+                                                <span>Going</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-3">
+                                            <div class="mini-summary">
+                                                <strong>@(item.Summary?.MaybeCount ?? 0)</strong>
+                                                <span>Maybe</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-3">
+                                            <div class="mini-summary">
+                                                <strong>@(item.Summary?.NotGoingCount ?? 0)</strong>
+                                                <span>No</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-3">
+                                            <div class="mini-summary">
+                                                <strong>@(item.Summary?.NoResponseCount ?? 0)</strong>
+                                                <span>Missing</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <a asp-controller="Practices"
+                                       asp-action="Details"
+                                       asp-route-id="@item.PracticeSession.Id"
+                                       class="btn btn-outline-primary mobile-action w-100">
+                                        Open
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
+            }
+        </div>
+    }
 
-                <div class="col-12 col-md-4">
-                    <div class="summary-box">
-                        <p class="summary-number">3</p>
-                        <div class="summary-label">Mark attendance</div>
-                    </div>
+    <div>
+        <h2 class="h5 mb-3">Upcoming practices</h2>
+
+        @if (Model.UpcomingPractices.Count == 0)
+        {
+            <div class="card app-card">
+                <div class="card-body">
+                    <p class="text-muted mb-0">
+                        No upcoming practices to show.
+                    </p>
                 </div>
             </div>
-        </div>
+        }
+        else
+        {
+            <div class="list-group dashboard-list">
+                @foreach (DashboardPracticeCardViewModel item in Model.UpcomingPractices)
+                {
+                    <a asp-controller="Practices"
+                       asp-action="Details"
+                       asp-route-id="@item.PracticeSession.Id"
+                       class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <h3 class="h6 mb-1">@item.PracticeSession.Title</h3>
+
+                                <p class="text-muted mb-1">
+                                    @item.Group.Name
+                                </p>
+
+                                <p class="mb-0">
+                                    @item.PracticeSession.StartTime.ToString("dd MMM HH:mm")
+                                    -
+                                    @item.PracticeSession.Location
+                                </p>
+                            </div>
+
+                            @if (item.CurrentUserAttendance != null)
+                            {
+                                <span class="badge bg-primary">
+                                    @item.CurrentUserAttendance.Status
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    No answer
+                                </span>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+        }
     </div>
 </div>

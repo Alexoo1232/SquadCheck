@@ -1,0 +1,33 @@
+@{
+    ViewData["Title"] = "Welcome";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card app-card">
+                <div class="card-body text-center py-5">
+                    <h1 class="display-6 fw-bold mb-3">SquadCheck</h1>
+
+                    <p class="lead text-muted mb-4">
+                        Plan practices, join groups, and mark attendance from your phone.
+                    </p>
+
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                        <a asp-controller="Account"
+                           asp-action="Register"
+                           class="btn btn-primary mobile-action">
+                            Create account
+                        </a>
+
+                        <a asp-controller="Account"
+                           asp-action="Login"
+                           class="btn btn-outline-primary mobile-action">
+                            Log in
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
