@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SquadCheck.Managers;
 using SquadCheck.Models;
 using SquadCheck.Models.ViewModels.Account;
+using SquadCheck.Security;
 
 namespace SquadCheck.Controllers;
 
@@ -76,10 +77,16 @@ public class AccountController : Controller
 
         if (result.Succeeded)
         {
-            _groupManager.CreateOrConnectIdentityUser(
+            User domainUser = _groupManager.CreateOrConnectIdentityUser(
                 viewModel.FullName,
                 viewModel.Email,
                 identityUser.Id);
+
+            string roleToAssign = domainUser.IsCoach
+                ? AppRoles.Coach
+                : AppRoles.Member;
+
+            await _userManager.AddToRoleAsync(identityUser, roleToAssign);
 
             await _signInManager.SignInAsync(identityUser, isPersistent: false);
 
