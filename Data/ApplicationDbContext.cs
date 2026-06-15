@@ -24,6 +24,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Attendance> Attendances => Set<Attendance>();
 
+    public DbSet<EmailNotificationLog> EmailNotificationLogs => Set<EmailNotificationLog>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -166,6 +168,38 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(attendance => attendance.User)
                 .WithMany()
                 .HasForeignKey(attendance => attendance.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<EmailNotificationLog>(entity =>
+        {
+            entity.ToTable("EmailNotificationLogs");
+
+            entity.HasKey(log => log.Id);
+
+            entity.Property(log => log.NotificationType)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.Property(log => log.SentAt)
+                .HasColumnType("timestamp without time zone");
+
+            entity.HasIndex(log => new
+                {
+                    log.PracticeSessionId,
+                    log.UserId,
+                    log.NotificationType
+                })
+                .IsUnique();
+
+            entity.HasOne(log => log.PracticeSession)
+                .WithMany()
+                .HasForeignKey(log => log.PracticeSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(log => log.User)
+                .WithMany()
+                .HasForeignKey(log => log.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
