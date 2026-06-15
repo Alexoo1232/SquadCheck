@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using SquadCheck.Data;
 using SquadCheck.Managers;
 using SquadCheck.Models;
+using SquadCheck.Services.Email;
+using SquadCheck.Services.Reminders;
 
 namespace SquadCheck
 {
@@ -48,6 +50,15 @@ namespace SquadCheck
                 options.LogoutPath = "/Account/Logout";
                 options.AccessDeniedPath = "/Account/AccessDenied";
             });
+
+            builder.Services.Configure<EmailSettings>(
+                builder.Configuration.GetSection("EmailSettings"));
+
+            builder.Services.Configure<ReminderSettings>(
+                builder.Configuration.GetSection("ReminderSettings"));
+
+            builder.Services.AddTransient<IEmailService, SmtpEmailService>();
+            builder.Services.AddHostedService<PracticeReminderWorker>();
             
             builder.Services.AddScoped<GroupManager>();
             builder.Services.AddScoped<PracticeManager>();

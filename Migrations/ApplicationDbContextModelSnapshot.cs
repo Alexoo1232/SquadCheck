@@ -258,6 +258,38 @@ namespace SquadCheck.Migrations
                     b.ToTable("Attendances", (string)null);
                 });
 
+            modelBuilder.Entity("SquadCheck.Models.EmailNotificationLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("NotificationType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("PracticeSessionId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("PracticeSessionId", "UserId", "NotificationType")
+                        .IsUnique();
+
+                    b.ToTable("EmailNotificationLogs", (string)null);
+                });
+
             modelBuilder.Entity("SquadCheck.Models.Group", b =>
                 {
                     b.Property<int>("Id")
@@ -454,6 +486,25 @@ namespace SquadCheck.Migrations
                 });
 
             modelBuilder.Entity("SquadCheck.Models.Attendance", b =>
+                {
+                    b.HasOne("SquadCheck.Models.PracticeSession", "PracticeSession")
+                        .WithMany()
+                        .HasForeignKey("PracticeSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SquadCheck.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PracticeSession");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SquadCheck.Models.EmailNotificationLog", b =>
                 {
                     b.HasOne("SquadCheck.Models.PracticeSession", "PracticeSession")
                         .WithMany()
