@@ -57,6 +57,13 @@
                            class="btn btn-outline-primary mobile-action">
                             Create practice
                         </a>
+
+                        <a asp-controller="Practices"
+                           asp-action="CreateRecurring"
+                           asp-route-groupId="@Model.Group.Id"
+                           class="btn btn-outline-primary mobile-action">
+                            Create recurring
+                        </a>
                     </div>
                 }
             </div>

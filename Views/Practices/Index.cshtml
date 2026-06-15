@@ -38,11 +38,19 @@
             @if (User.IsInRole(SquadCheck.Security.AppRoles.Admin) ||
                  User.IsInRole(SquadCheck.Security.AppRoles.Coach))
             {
-                <a asp-controller="Practices"
-                   asp-action="Create"
-                   class="btn btn-primary mobile-action">
-                    Create practice
-                </a>
+                <div class="mobile-stack">
+                    <a asp-controller="Practices"
+                       asp-action="Create"
+                       class="btn btn-primary mobile-action">
+                        Create practice
+                    </a>
+
+                    <a asp-controller="Practices"
+                       asp-action="CreateRecurring"
+                       class="btn btn-outline-primary mobile-action">
+                        Create recurring
+                    </a>
+                </div>
             }
         </div>
     </div>
@@ -76,11 +84,19 @@
                     @if (User.IsInRole(SquadCheck.Security.AppRoles.Admin) ||
                          User.IsInRole(SquadCheck.Security.AppRoles.Coach))
                     {
-                        <a asp-controller="Practices"
-                           asp-action="Create"
-                           class="btn btn-primary mobile-action">
-                            Create practice
-                        </a>
+                        <div class="mobile-stack">
+                            <a asp-controller="Practices"
+                               asp-action="Create"
+                               class="btn btn-primary mobile-action">
+                                Create practice
+                            </a>
+
+                            <a asp-controller="Practices"
+                               asp-action="CreateRecurring"
+                               class="btn btn-outline-primary mobile-action">
+                                Create recurring
+                            </a>
+                        </div>
                     }
                 </div>
             </div>

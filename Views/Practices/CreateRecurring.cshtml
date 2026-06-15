@@ -1,0 +1,138 @@
+@model SquadCheck.Models.ViewModels.CreateRecurringPracticeViewModel
+
+@{
+    ViewData["Title"] = "Create recurring practices";
+}
+
+<div class="container mt-4">
+    <div class="mb-3">
+        <a asp-controller="Practices" asp-action="Index" class="text-decoration-none">
+            ← Back to practices
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card app-card">
+                <div class="card-body">
+                    <h1 class="h3 mb-2">Create recurring practices</h1>
+
+                    <p class="text-muted">
+                        Create the same practice on selected weekdays until a chosen date.
+                    </p>
+
+                    <form asp-controller="Practices" asp-action="CreateRecurring" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="GroupId" class="form-label"></label>
+                            <select asp-for="GroupId" class="form-select" asp-items="ViewBag.Groups">
+                                <option value="">Choose group</option>
+                            </select>
+                            <span asp-validation-for="GroupId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label"></label>
+                            <input asp-for="Title" class="form-control" placeholder="Example: Team practice" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="StartDate" class="form-label"></label>
+                                <input asp-for="StartDate" type="date" class="form-control" />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="RepeatUntil" class="form-label"></label>
+                                <input asp-for="RepeatUntil" type="date" class="form-control" />
+                                <span asp-validation-for="RepeatUntil" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="StartTime" class="form-label"></label>
+                                <input asp-for="StartTime" type="time" class="form-control" />
+                                <span asp-validation-for="StartTime" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="EndTime" class="form-label"></label>
+                                <input asp-for="EndTime" type="time" class="form-control" />
+                                <span asp-validation-for="EndTime" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 mt-3">
+                            <label asp-for="Location" class="form-label"></label>
+                            <input asp-for="Location" class="form-control" placeholder="Example: Sports Hall" />
+                            <span asp-validation-for="Location" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MaxParticipants" class="form-label"></label>
+                            <input asp-for="MaxParticipants" type="number" min="1" class="form-control" placeholder="Optional" />
+                            <span asp-validation-for="MaxParticipants" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Repeat on</label>
+
+                            <div class="weekday-grid">
+                                <div class="form-check">
+                                    <input asp-for="Monday" class="form-check-input" />
+                                    <label asp-for="Monday" class="form-check-label">Monday</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input asp-for="Tuesday" class="form-check-input" />
+                                    <label asp-for="Tuesday" class="form-check-label">Tuesday</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input asp-for="Wednesday" class="form-check-input" />
+                                    <label asp-for="Wednesday" class="form-check-label">Wednesday</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input asp-for="Thursday" class="form-check-input" />
+                                    <label asp-for="Thursday" class="form-check-label">Thursday</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input asp-for="Friday" class="form-check-input" />
+                                    <label asp-for="Friday" class="form-check-label">Friday</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input asp-for="Saturday" class="form-check-input" />
+                                    <label asp-for="Saturday" class="form-check-label">Saturday</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input asp-for="Sunday" class="form-check-input" />
+                                    <label asp-for="Sunday" class="form-check-label">Sunday</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex">
+                            <button type="submit" class="btn btn-primary mobile-action">
+                                Create recurring practices
+                            </button>
+
+                            <a asp-controller="Practices" asp-action="Index" class="btn btn-outline-secondary mobile-action">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

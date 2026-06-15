@@ -244,9 +244,19 @@ body {
     border: 1px solid #e6e8eb;
 }
 
+.weekday-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+
 @media (min-width: 576px) {
     .dashboard-attendance-buttons {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    .weekday-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
