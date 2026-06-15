@@ -170,6 +170,94 @@ public class PracticeManager
     }
 
     /// <summary>
+    /// Creates many practice sessions on selected weekdays between two dates.
+    /// </summary>
+    /// <param name="groupId">The id of the group that owns the sessions.</param>
+    /// <param name="title">The practice title.</param>
+    /// <param name="startDate">The first date in the range.</param>
+    /// <param name="repeatUntil">The last date in the range.</param>
+    /// <param name="startTime">The time of day when each session starts.</param>
+    /// <param name="endTime">The time of day when each session ends.</param>
+    /// <param name="location">The practice location.</param>
+    /// <param name="daysOfWeek">The weekdays that should be created.</param>
+    /// <param name="maxParticipants">The optional maximum participant count.</param>
+    /// <returns>The created practice sessions.</returns>
+    public List<PracticeSession> CreateRecurringSessions(
+        int groupId,
+        string title,
+        DateTime startDate,
+        DateTime repeatUntil,
+        TimeSpan startTime,
+        TimeSpan endTime,
+        string location,
+        List<DayOfWeek> daysOfWeek,
+        int? maxParticipants = null)
+    {
+        Group group = _context.Groups.FirstOrDefault(group => group.Id == groupId)
+            ?? throw new InvalidOperationException("The group could not be found.");
+
+        if (daysOfWeek == null || daysOfWeek.Count == 0)
+        {
+            throw new ArgumentException("Choose at least one weekday.");
+        }
+
+        if (repeatUntil.Date < startDate.Date)
+        {
+            throw new ArgumentException("Repeat until date cannot be before the start date.");
+        }
+
+        if (endTime <= startTime)
+        {
+            throw new ArgumentException("End time must be after start time.");
+        }
+
+        List<PracticeSession> createdSessions = new();
+
+        DateTime currentDate = startDate.Date;
+        DateTime finalDate = repeatUntil.Date;
+
+        while (currentDate <= finalDate)
+        {
+            if (daysOfWeek.Contains(currentDate.DayOfWeek))
+            {
+                DateTime sessionStart = currentDate.Add(startTime);
+                DateTime sessionEnd = currentDate.Add(endTime);
+
+                bool duplicateExists = _context.PracticeSessions.Any(session =>
+                    session.GroupId == group.Id &&
+                    session.Title == title.Trim() &&
+                    session.StartTime == sessionStart);
+
+                if (!duplicateExists)
+                {
+                    PracticeSession session = new(
+                        0,
+                        group.Id,
+                        title,
+                        sessionStart,
+                        sessionEnd,
+                        location,
+                        maxParticipants);
+
+                    _context.PracticeSessions.Add(session);
+                    createdSessions.Add(session);
+                }
+            }
+
+            currentDate = currentDate.AddDays(1);
+        }
+
+        if (createdSessions.Count == 0)
+        {
+            throw new InvalidOperationException("No new practice sessions were created.");
+        }
+
+        _context.SaveChanges();
+
+        return createdSessions;
+    }
+
+    /// <summary>
     /// Changes the details of a practice.
     /// </summary>
     /// <param name="sessionId">The id of the practice session to update.</param>

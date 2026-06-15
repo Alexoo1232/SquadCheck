@@ -211,6 +211,104 @@ public class PracticesController : Controller
     }
 
     /// <summary>
+    /// Shows the create-recurring-practices form.
+    /// </summary>
+    /// <param name="groupId">An optional group id to preselect in the form.</param>
+    /// <returns>The recurring-create view or a redirect.</returns>
+    [Authorize(Roles = AppRoles.AdminOrCoach)]
+    [HttpGet]
+    public async Task<IActionResult> CreateRecurring(int? groupId)
+    {
+        List<Group> manageableGroups = await GetManageableGroupsAsync();
+
+        if (manageableGroups.Count == 0)
+        {
+            TempData["ErrorMessage"] = "You need to be a coach of a group before creating recurring practices.";
+            return RedirectToAction("Index", "Groups");
+        }
+
+        CreateRecurringPracticeViewModel viewModel = new();
+
+        if (groupId.HasValue)
+        {
+            bool canManageGroup = manageableGroups.Any(group => group.Id == groupId.Value);
+
+            if (!canManageGroup)
+            {
+                return Forbid();
+            }
+
+            viewModel.GroupId = groupId.Value;
+        }
+
+        PrepareGroupSelectList(manageableGroups, viewModel.GroupId);
+
+        return View(viewModel);
+    }
+
+    /// <summary>
+    /// Creates many recurring practice sessions from the form.
+    /// </summary>
+    /// <param name="viewModel">The posted recurring-practice form values.</param>
+    /// <returns>A redirect to the group details page, or the form with validation errors.</returns>
+    [Authorize(Roles = AppRoles.AdminOrCoach)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateRecurring(CreateRecurringPracticeViewModel viewModel)
+    {
+        List<Group> manageableGroups = await GetManageableGroupsAsync();
+        bool canCreateForGroup = manageableGroups.Any(group => group.Id == viewModel.GroupId);
+
+        if (!canCreateForGroup)
+        {
+            return Forbid();
+        }
+
+        List<DayOfWeek> selectedDays = GetSelectedDays(viewModel);
+
+        if (selectedDays.Count == 0)
+        {
+            ModelState.AddModelError(string.Empty, "Choose at least one weekday.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            PrepareGroupSelectList(manageableGroups, viewModel.GroupId);
+            return View(viewModel);
+        }
+
+        try
+        {
+            List<PracticeSession> sessions = _practiceManager.CreateRecurringSessions(
+                viewModel.GroupId,
+                viewModel.Title,
+                viewModel.StartDate,
+                viewModel.RepeatUntil,
+                viewModel.StartTime,
+                viewModel.EndTime,
+                viewModel.Location,
+                selectedDays,
+                viewModel.MaxParticipants);
+
+            TempData["SuccessMessage"] = $"{sessions.Count} practice sessions were created.";
+
+            return RedirectToAction("Details", "Groups", new { id = viewModel.GroupId });
+        }
+        catch (InvalidOperationException exception)
+        {
+            ModelState.AddModelError(string.Empty, exception.Message);
+            PrepareGroupSelectList(manageableGroups, viewModel.GroupId);
+            return View(viewModel);
+        }
+        catch (ArgumentException exception)
+        {
+            ModelState.AddModelError(string.Empty, exception.Message);
+            PrepareGroupSelectList(manageableGroups, viewModel.GroupId);
+            return View(viewModel);
+        }
+    }
+
+    /// <summary>
     /// Shows the edit practice form.
     /// </summary>
     /// <param name="id">The id of the practice session to edit.</param>
@@ -416,6 +514,26 @@ public class PracticesController : Controller
         }
 
         return _groupManager.GetGroupsCoachedByUser(currentUser.Id);
+    }
+
+    /// <summary>
+    /// Converts weekday checkboxes into a list of selected days.
+    /// </summary>
+    /// <param name="viewModel">The posted recurring-practice form values.</param>
+    /// <returns>The selected weekdays.</returns>
+    private static List<DayOfWeek> GetSelectedDays(CreateRecurringPracticeViewModel viewModel)
+    {
+        List<DayOfWeek> days = new();
+
+        if (viewModel.Monday) days.Add(DayOfWeek.Monday);
+        if (viewModel.Tuesday) days.Add(DayOfWeek.Tuesday);
+        if (viewModel.Wednesday) days.Add(DayOfWeek.Wednesday);
+        if (viewModel.Thursday) days.Add(DayOfWeek.Thursday);
+        if (viewModel.Friday) days.Add(DayOfWeek.Friday);
+        if (viewModel.Saturday) days.Add(DayOfWeek.Saturday);
+        if (viewModel.Sunday) days.Add(DayOfWeek.Sunday);
+
+        return days;
     }
 
     /// <summary>
