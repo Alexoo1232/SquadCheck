@@ -5,66 +5,69 @@
     ViewData["Title"] = "Users";
 }
 
-<div class="container mt-4">
-    <div class="page-header">
-        <h1 class="page-title">Users</h1>
-        <p class="page-subtitle">Manage user roles.</p>
+<div class="page-header">
+    <h1 class="page-title">Users</h1>
+    <p class="page-subtitle">Review accounts and manage roles across your squads.</p>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success fade-in-up mb-3">
+        @TempData["SuccessMessage"]
     </div>
+}
 
-    @if (TempData["SuccessMessage"] != null)
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger fade-in-up mb-3">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="row g-3 fade-in-up-delayed">
+    @foreach (var user in Model)
     {
-        <div class="alert alert-success">
-            @TempData["SuccessMessage"]
-        </div>
-    }
+        <div class="col-12 col-lg-6">
+            <div class="card app-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h2 class="h5 mb-1">@user.FullName</h2>
+                            <p class="text-muted mb-1">@user.Email</p>
+                        </div>
 
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["ErrorMessage"]
-        </div>
-    }
-
-    <div class="row g-3">
-        @foreach (var user in Model)
-        {
-            <div class="col-12 col-lg-6">
-                <div class="card app-card">
-                    <div class="card-body">
-                        <h2 class="h5 mb-1">@user.FullName</h2>
-                        <p class="text-muted mb-2">@user.Email</p>
-
-                        <p class="mb-1">
-                            <strong>Current role:</strong>
+                        <span class="badge bg-light text-dark">
                             @(user.Roles.Count > 0 ? string.Join(", ", user.Roles) : "No role")
-                        </p>
-
-                        <p class="mb-3">
-                            <strong>Domain user:</strong>
-                            @(user.DomainUserId.HasValue ? $"Yes, ID {user.DomainUserId}" : "No")
-                        </p>
-
-                        <form asp-controller="Admin" asp-action="SetRole" method="post">
-                            @Html.AntiForgeryToken()
-
-                            <input type="hidden" name="identityUserId" value="@user.IdentityUserId" />
-
-                            <div class="mb-3">
-                                <label class="form-label">Set role</label>
-                                <select name="role" class="form-select">
-                                    <option value="@AppRoles.Member" selected="@(user.Roles.Contains(AppRoles.Member))">Member</option>
-                                    <option value="@AppRoles.Coach" selected="@(user.Roles.Contains(AppRoles.Coach))">Coach</option>
-                                    <option value="@AppRoles.Admin" selected="@(user.Roles.Contains(AppRoles.Admin))">Admin</option>
-                                </select>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary mobile-action">
-                                Update role
-                            </button>
-                        </form>
+                        </span>
                     </div>
+
+                    <p class="mb-2 small text-muted">
+                        <strong>Domain user:</strong>
+                        @(user.DomainUserId.HasValue ? $"Yes · ID {user.DomainUserId}" : "No")
+                    </p>
+
+                    <hr class="my-3" />
+
+                    <form asp-controller="Admin" asp-action="SetRole" method="post" class="mobile-stack">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="identityUserId" value="@user.IdentityUserId" />
+
+                        <div>
+                            <label class="form-label mb-1">Set role</label>
+                            <select name="role" class="form-select">
+                                <option value="@AppRoles.Member" selected="@(user.Roles.Contains(AppRoles.Member))">Member</option>
+                                <option value="@AppRoles.Coach" selected="@(user.Roles.Contains(AppRoles.Coach))">Coach</option>
+                                <option value="@AppRoles.Admin" selected="@(user.Roles.Contains(AppRoles.Admin))">Admin</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm mobile-action">
+                            Update role
+                        </button>
+                    </form>
                 </div>
             </div>
-        }
-    </div>
+        </div>
+    }
 </div>

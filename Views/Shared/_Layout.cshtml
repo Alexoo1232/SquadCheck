@@ -1,15 +1,19 @@
+@using SquadCheck.Security
+@inject Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper<dynamic> Html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SquadCheck</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
             <div class="container">
                 <a class="navbar-brand fw-semibold" asp-controller="Home" asp-action="Index">
                     SquadCheck
@@ -28,19 +32,25 @@
                 <div class="collapse navbar-collapse" id="mainNavbar">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "nav-link-active" : "")"
+                                   asp-controller="Home"
+                                   asp-action="Index">
                                 Dashboard
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Groups" asp-action="Index">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Groups" ? "nav-link-active" : "")"
+                                   asp-controller="Groups"
+                                   asp-action="Index">
                                 Groups
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Practices" asp-action="Index">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Practices" ? "nav-link-active" : "")"
+                                   asp-controller="Practices"
+                                   asp-action="Index">
                                 Practices
                             </a>
                         </li>
@@ -48,16 +58,20 @@
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Groups" asp-action="Join">
+                                <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Join" && ViewContext.RouteData.Values["controller"]?.ToString() == "Groups" ? "nav-link-active" : "")"
+                                       asp-controller="Groups"
+                                       asp-action="Join">
                                     Join group
                                 </a>
                             </li>
                         }
 
-                        @if (User.IsInRole(SquadCheck.Security.AppRoles.Admin))
+                        @if (User.IsInRole(AppRoles.Admin))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="Users">
+                                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "nav-link-active" : "")"
+                                       asp-controller="Admin"
+                                       asp-action="Users">
                                     Admin
                                 </a>
                             </li>
@@ -71,12 +85,15 @@
     </header>
 
     <main class="main-content">
-        @RenderBody()
+        <div class="container mt-4 fade-in-up">
+            @RenderBody()
+        </div>
     </main>
 
-    <footer class="footer border-top bg-white">
-        <div class="container text-muted small">
-            SquadCheck - Your Favorite Practice Attendance Manager
+    <footer class="footer">
+        <div class="container text-muted small d-flex justify-content-between align-items-center">
+            <span>SquadCheck · Practice attendance manager</span>
+            <span>&copy; @DateTime.UtcNow.Year</span>
         </div>
     </footer>
 

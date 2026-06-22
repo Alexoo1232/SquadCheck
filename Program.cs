@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using SquadCheck.Data;
 using SquadCheck.Managers;
 using SquadCheck.Models;
@@ -68,6 +70,10 @@ namespace SquadCheck
 
             IdentitySeeder.SeedAsync(app.Services).GetAwaiter().GetResult();
 
+            CultureInfo appCulture = CultureInfo.GetCultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentCulture = appCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = appCulture;
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -76,6 +82,13 @@ namespace SquadCheck
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
+            app.UseRequestLocalization(new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(appCulture),
+                SupportedCultures = new[] { appCulture },
+                SupportedUICultures = new[] { appCulture }
+            });
 
             app.UseRouting();
 
