@@ -38,6 +38,10 @@ dotnet run
 
 Then open the local URL shown in the terminal.
 
+## Deployment
+
+For Railway deployment, see [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md).
+
 ## Basic Usage
 
 1. Go to the Groups page.
