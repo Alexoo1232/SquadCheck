@@ -1,6 +1,6 @@
 # SquadCheck
 
-SquadCheck is a simple school project and is an ASP.NET Core MVC application for managing sports groups, practice sessions, and attendance.
+SquadCheck is an ASP.NET Core MVC application for managing sports groups, practice sessions, and attendance.
 
 ## What The Program Can Do
 
